@@ -1,0 +1,23 @@
+services:
+  # Dịch vụ Backend FastAPI
+  api:
+    build: .
+    container_name: tai_chinh_api
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
