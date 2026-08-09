@@ -2,7 +2,7 @@ import uuid
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import Date, ForeignKey, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import Computed, Date, ForeignKey, ForeignKeyConstraint, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -33,6 +33,30 @@ class Transaction(Base, TimestampMixin):
     __tablename__ = "transactions"
     __table_args__ = (
         UniqueConstraint("id", "user_id", name="unique_transaction_user"),
+        ForeignKeyConstraint(
+            ["account_id", "user_id"],
+            ["public.accounts.id", "public.accounts.user_id"],
+            ondelete="CASCADE",
+            name="fk_transactions_account",
+        ),
+        ForeignKeyConstraint(
+            ["destination_account_id", "user_id"],
+            ["public.accounts.id", "public.accounts.user_id"],
+            ondelete="SET NULL",
+            name="fk_transactions_destination_account",
+        ),
+        ForeignKeyConstraint(
+            ["statement_id", "user_id"],
+            ["public.statements.id", "public.statements.user_id"],
+            ondelete="SET NULL",
+            name="fk_transactions_statement",
+        ),
+        ForeignKeyConstraint(
+            ["instalment_id", "user_id"],
+            ["public.instalments.id", "public.instalments.user_id"],
+            ondelete="SET NULL",
+            name="fk_transactions_instalment",
+        ),
         {"schema": "public"},
     )
 
@@ -56,6 +80,7 @@ class Transaction(Base, TimestampMixin):
     fee: Mapped[Decimal] = mapped_column(Numeric(15, 2), default=0.00)
     # total_amount là GENERATED STORED column trong DB
     total_amount: Mapped[Decimal | None] = mapped_column(
-        Numeric(15, 2), insert_default=None
+        Numeric(15, 2),
+        Computed("amount + COALESCE(fee, 0.00)", persisted=True),
     )
     description: Mapped[str | None] = mapped_column(Text)

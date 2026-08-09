@@ -2,7 +2,7 @@ import uuid
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import Date, Integer, Numeric, String, UniqueConstraint
+from sqlalchemy import Date, ForeignKeyConstraint, Integer, Numeric, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -32,6 +32,12 @@ class Statement(Base, TimestampMixin):
             "account_id", "statement_date", name="unique_statement_per_account"
         ),
         UniqueConstraint("id", "user_id", name="unique_statement_user"),
+        ForeignKeyConstraint(
+            ["account_id", "user_id"],
+            ["public.accounts.id", "public.accounts.user_id"],
+            ondelete="CASCADE",
+            name="fk_statements_account",
+        ),
         {"schema": "public"},
     )
 

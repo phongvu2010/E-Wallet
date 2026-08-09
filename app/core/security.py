@@ -50,7 +50,8 @@ def get_current_user(
             token,
             settings.SUPABASE_JWT_SECRET,
             algorithms=[settings.ALGORITHM],
-            options={"verify_aud": False},
+            audience=settings.SUPABASE_JWT_AUDIENCE if settings.SUPABASE_JWT_AUDIENCE else None,
+            options={"verify_aud": bool(settings.SUPABASE_JWT_AUDIENCE)},
         )
         user_id: str | None = payload.get("sub")
         if not user_id:

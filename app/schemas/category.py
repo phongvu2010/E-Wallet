@@ -51,3 +51,9 @@ class CategoryResponse(CategoryBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CategoryTreeResponse(CategoryResponse):
+    """Schema phản hồi thông tin danh mục theo dạng cây phân cấp Cha - Con."""
+
+    children: list["CategoryTreeResponse"] = []

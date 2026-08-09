@@ -252,7 +252,10 @@ FOR EACH ROW EXECUTE FUNCTION update_account_balance_on_transaction();
 -- -----------------------------------------------------------------------------
 
 -- Stored Procedure: Tính toán & Đồng bộ lại số dư tài khoản từ lịch sử giao dịch (Dùng khi cần Sync lại Data)
-CREATE OR REPLACE FUNCTION public.recalculate_account_balance(p_account_id UUID)
+CREATE OR REPLACE FUNCTION public.recalculate_account_balance(
+    p_account_id UUID,
+    p_user_id UUID DEFAULT auth.uid()
+)
 RETURNS NUMERIC 
 LANGUAGE plpgsql 
 SECURITY DEFINER
@@ -267,29 +270,38 @@ DECLARE
     v_new_balance NUMERIC(15, 2);
 BEGIN
     -- Lấy số dư ban đầu
-    SELECT COALESCE(initial_balance, 0.00) INTO v_initial FROM public.accounts WHERE id = p_account_id;
+    SELECT COALESCE(initial_balance, 0.00) INTO v_initial 
+    FROM public.accounts 
+    WHERE id = p_account_id AND (p_user_id IS NULL OR user_id = p_user_id);
 
     -- Tổng Thu nhập (+)
-    SELECT COALESCE(SUM(total_amount), 0.00) INTO v_income FROM public.transactions WHERE account_id = p_account_id AND type = 'income';
+    SELECT COALESCE(SUM(total_amount), 0.00) INTO v_income 
+    FROM public.transactions 
+    WHERE account_id = p_account_id AND type = 'income' AND (p_user_id IS NULL OR user_id = p_user_id);
 
     -- Tổng Chi tiêu (-) (Bao gồm expense & instalment từng kỳ)
-    SELECT COALESCE(SUM(total_amount), 0.00) INTO v_expense FROM public.transactions WHERE account_id = p_account_id AND type IN ('expense', 'instalment');
+    SELECT COALESCE(SUM(total_amount), 0.00) INTO v_expense 
+    FROM public.transactions 
+    WHERE account_id = p_account_id AND type IN ('expense', 'instalment') AND (p_user_id IS NULL OR user_id = p_user_id);
 
     -- Tổng Chuyển đi (-) (Bao gồm cả phí)
-    SELECT COALESCE(SUM(total_amount), 0.00) INTO v_transfer_out FROM public.transactions WHERE account_id = p_account_id AND type = 'transfer';
+    SELECT COALESCE(SUM(total_amount), 0.00) INTO v_transfer_out 
+    FROM public.transactions 
+    WHERE account_id = p_account_id AND type = 'transfer' AND (p_user_id IS NULL OR user_id = p_user_id);
 
     -- Tổng Nhận chuyển khoản (+) (Chỉ lấy số tiền nhận gốc amount)
-    SELECT COALESCE(SUM(amount), 0.00) INTO v_transfer_in FROM public.transactions WHERE destination_account_id = p_account_id AND type = 'transfer';
+    SELECT COALESCE(SUM(amount), 0.00) INTO v_transfer_in 
+    FROM public.transactions 
+    WHERE destination_account_id = p_account_id AND type = 'transfer' AND (p_user_id IS NULL OR user_id = p_user_id);
 
     -- Tính số dư thực tế mới
     v_new_balance := v_initial + v_income - v_expense - v_transfer_out + v_transfer_in;
 
     -- Cập nhật vào bảng accounts
-    -- Trong hàm public.recalculate_account_balance:
     UPDATE public.accounts 
     SET current_balance = v_new_balance, updated_at = NOW() 
     WHERE id = p_account_id 
-    AND user_id = auth.uid();
+    AND (p_user_id IS NULL OR user_id = p_user_id);
 
     RETURN v_new_balance;
 END;

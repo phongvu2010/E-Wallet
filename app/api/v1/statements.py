@@ -2,10 +2,12 @@ from typing import Sequence
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
 from app.core.security import CurrentUser
+from app.crud.crud_account import crud_account
 from app.crud.crud_statement import crud_statement
 from app.schemas.statement import StatementCreate, StatementResponse, StatementUpdate
 
@@ -73,10 +75,21 @@ async def create_statement(
 
     Returns:
         StatementResponse: Đối tượng sao kê vừa được tạo.
+
+    Raises:
+        HTTPException: Trả về lỗi 400 nếu thông tin tham chiếu không hợp lệ hoặc vi phạm ràng buộc.
     """
-    return await crud_statement.create_by_user(
-        db, statement_in=statement_in, user_id=user.id
-    )
+    try:
+        return await crud_statement.create_by_user(
+            db, statement_in=statement_in, user_id=user.id
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Dữ liệu không hợp lệ hoặc vi phạm ràng buộc cơ sở dữ liệu: {str(e.orig)}",
+        )
 
 
 @router.put("/{statement_id}", response_model=StatementResponse)
@@ -99,6 +112,7 @@ async def update_statement(
 
     Raises:
         HTTPException: Trả về lỗi 404 nếu kỳ sao kê không tồn tại hoặc không thuộc sở hữu.
+        HTTPException: Trả về lỗi 400 nếu dữ liệu cập nhật không hợp lệ.
     """
     statement = await crud_statement.get_by_id(
         db, statement_id=statement_id, user_id=user.id
@@ -108,7 +122,22 @@ async def update_statement(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Kỳ sao kê không tồn tại hoặc không thuộc quyền sở hữu.",
         )
-    return await crud_statement.update(db, db_obj=statement, obj_in=statement_in)
+    if statement_in.account_id is not None:
+        account = await crud_account.get_by_id(
+            db, account_id=statement_in.account_id, user_id=user.id
+        )
+        if not account:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Tài khoản (account_id) không tồn tại hoặc không thuộc quyền sở hữu của bạn.",
+            )
+    try:
+        return await crud_statement.update(db, db_obj=statement, obj_in=statement_in)
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Dữ liệu không hợp lệ hoặc vi phạm ràng buộc cơ sở dữ liệu: {str(e.orig)}",
+        )
 
 
 @router.delete("/{statement_id}", response_model=StatementResponse)

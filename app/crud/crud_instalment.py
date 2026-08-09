@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
+from app.crud.crud_account import crud_account
 from app.models.instalment import Instalment
 from app.schemas.instalment import InstalmentCreate, InstalmentUpdate
 
@@ -66,7 +67,17 @@ class CRUDInstalment(CRUDBase[Instalment, InstalmentCreate, InstalmentUpdate]):
 
         Returns:
             Instalment: Đối tượng khoản trả góp vừa tạo.
+
+        Raises:
+            ValueError: Nếu tài khoản không tồn tại hoặc không thuộc quyền sở hữu.
         """
+        account = await crud_account.get_by_id(
+            db, account_id=instalment_in.account_id, user_id=user_id
+        )
+        if not account:
+            raise ValueError(
+                "Tài khoản (account_id) không tồn tại hoặc không thuộc quyền sở hữu của bạn."
+            )
         return await self.create(
             db, obj_in=instalment_in, extra_data={"user_id": user_id}
         )

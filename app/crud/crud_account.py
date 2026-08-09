@@ -1,7 +1,7 @@
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
@@ -68,6 +68,23 @@ class CRUDAccount(CRUDBase[Account, AccountCreate, AccountUpdate]):
             Account: Đối tượng tài khoản vừa tạo.
         """
         return await self.create(db, obj_in=account_in, extra_data={"user_id": user_id})
+
+    async def recalculate_balance(
+        self, db: AsyncSession, account_id: UUID, user_id: UUID
+    ) -> float | None:
+        """Gọi Stored Procedure recalculate_account_balance để tính toán lại số dư tài khoản.
+
+        Args:
+            db (AsyncSession): Session cơ sở dữ liệu bất đồng bộ.
+            account_id (UUID): ID tài khoản cần tính lại.
+            user_id (UUID): ID người dùng sở hữu.
+
+        Returns:
+            float | None: Số dư mới sau khi tính toán.
+        """
+        stmt = select(func.public.recalculate_account_balance(account_id, user_id))
+        result = await db.execute(stmt)
+        return result.scalar_one_or_none()
 
 
 crud_account = CRUDAccount()

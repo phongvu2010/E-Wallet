@@ -2,7 +2,7 @@ import uuid
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import Date, Integer, Numeric, String, UniqueConstraint
+from sqlalchemy import Computed, Date, ForeignKeyConstraint, Integer, Numeric, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -28,6 +28,12 @@ class Instalment(Base, TimestampMixin):
     __tablename__ = "instalments"
     __table_args__ = (
         UniqueConstraint("id", "user_id", name="unique_instalment_user"),
+        ForeignKeyConstraint(
+            ["account_id", "user_id"],
+            ["public.accounts.id", "public.accounts.user_id"],
+            ondelete="CASCADE",
+            name="fk_instalments_account",
+        ),
         {"schema": "public"},
     )
 
@@ -43,6 +49,7 @@ class Instalment(Base, TimestampMixin):
     term_months: Mapped[int] = mapped_column(Integer, default=12)
     # monthly_amount là cột GENERATED STORED trong DB
     monthly_amount: Mapped[Decimal | None] = mapped_column(
-        Numeric(15, 2), insert_default=None
+        Numeric(15, 2),
+        Computed("ROUND(total_amount / GREATEST(term_months, 1), 2)", persisted=True),
     )
     status: Mapped[str] = mapped_column(String(20), default="active")

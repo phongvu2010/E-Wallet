@@ -23,8 +23,14 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DATABASE_URL: str
     SUPABASE_JWT_SECRET: str
+    SUPABASE_JWT_AUDIENCE: str = "authenticated"
     ALGORITHM: str = "HS256"
-    BACKEND_CORS_ORIGINS: list[str] = ["*"]
+    BACKEND_CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+    ]
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
@@ -43,7 +49,12 @@ class Settings(BaseSettings):
             return json.loads(v)
         elif isinstance(v, list):
             return v
-        return ["*"]
+        return [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+        ]
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

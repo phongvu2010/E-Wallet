@@ -2,10 +2,12 @@ from typing import Sequence
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
 from app.core.security import CurrentUser
+from app.crud.crud_account import crud_account
 from app.crud.crud_instalment import crud_instalment
 from app.schemas.instalment import (
     InstalmentCreate,
@@ -77,10 +79,21 @@ async def create_instalment(
 
     Returns:
         InstalmentResponse: Đối tượng khoản trả góp vừa được tạo.
+
+    Raises:
+        HTTPException: Trả về lỗi 400 nếu dữ liệu tham chiếu không hợp lệ hoặc vi phạm ràng buộc.
     """
-    return await crud_instalment.create_by_user(
-        db, instalment_in=instalment_in, user_id=user.id
-    )
+    try:
+        return await crud_instalment.create_by_user(
+            db, instalment_in=instalment_in, user_id=user.id
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Dữ liệu không hợp lệ hoặc vi phạm ràng buộc cơ sở dữ liệu: {str(e.orig)}",
+        )
 
 
 @router.put("/{instalment_id}", response_model=InstalmentResponse)
@@ -103,6 +116,7 @@ async def update_instalment(
 
     Raises:
         HTTPException: Trả về lỗi 404 nếu khoản trả góp không tồn tại hoặc không thuộc sở hữu.
+        HTTPException: Trả về lỗi 400 nếu dữ liệu cập nhật không hợp lệ.
     """
     instalment = await crud_instalment.get_by_id(
         db, instalment_id=instalment_id, user_id=user.id
@@ -112,7 +126,22 @@ async def update_instalment(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Chương trình trả góp không tồn tại hoặc không thuộc quyền sở hữu.",
         )
-    return await crud_instalment.update(db, db_obj=instalment, obj_in=instalment_in)
+    if instalment_in.account_id is not None:
+        account = await crud_account.get_by_id(
+            db, account_id=instalment_in.account_id, user_id=user.id
+        )
+        if not account:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Tài khoản (account_id) không tồn tại hoặc không thuộc quyền sở hữu của bạn.",
+            )
+    try:
+        return await crud_instalment.update(db, db_obj=instalment, obj_in=instalment_in)
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Dữ liệu không hợp lệ hoặc vi phạm ràng buộc cơ sở dữ liệu: {str(e.orig)}",
+        )
 
 
 @router.delete("/{instalment_id}", response_model=InstalmentResponse)

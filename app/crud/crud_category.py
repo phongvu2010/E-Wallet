@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
 from app.models.category import Category
-from app.schemas.category import CategoryCreate, CategoryUpdate
+from app.schemas.category import CategoryCreate, CategoryTreeResponse, CategoryUpdate
 
 
 class CRUDCategory(CRUDBase[Category, CategoryCreate, CategoryUpdate]):
@@ -34,6 +34,30 @@ class CRUDCategory(CRUDBase[Category, CategoryCreate, CategoryUpdate]):
         )
         result = await db.execute(stmt)
         return result.scalars().all()
+
+    @staticmethod
+    def build_tree(categories: Sequence[Category]) -> list[CategoryTreeResponse]:
+        """Chuyển đổi danh sách danh mục phẳng thành danh sách cấu trúc cây (Parent - Children).
+
+        Args:
+            categories (Sequence[Category]): Danh sách danh mục dạng phẳng.
+
+        Returns:
+            list[CategoryTreeResponse]: Danh sách các danh mục gốc kèm danh mục con.
+        """
+        nodes: dict[UUID, CategoryTreeResponse] = {}
+        for cat in categories:
+            nodes[cat.id] = CategoryTreeResponse.model_validate(cat)
+
+        roots: list[CategoryTreeResponse] = []
+        for cat in categories:
+            node = nodes[cat.id]
+            if cat.parent_id and cat.parent_id in nodes:
+                nodes[cat.parent_id].children.append(node)
+            else:
+                roots.append(node)
+
+        return roots
 
     async def get_by_id(
         self, db: AsyncSession, category_id: UUID, user_id: UUID

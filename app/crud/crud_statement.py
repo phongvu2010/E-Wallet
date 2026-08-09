@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
+from app.crud.crud_account import crud_account
 from app.models.statement import Statement
 from app.schemas.statement import StatementCreate, StatementUpdate
 
@@ -66,7 +67,17 @@ class CRUDStatement(CRUDBase[Statement, StatementCreate, StatementUpdate]):
 
         Returns:
             Statement: Đối tượng sao kê vừa được tạo.
+
+        Raises:
+            ValueError: Nếu tài khoản không tồn tại hoặc không thuộc quyền sở hữu.
         """
+        account = await crud_account.get_by_id(
+            db, account_id=statement_in.account_id, user_id=user_id
+        )
+        if not account:
+            raise ValueError(
+                "Tài khoản (account_id) không tồn tại hoặc không thuộc quyền sở hữu của bạn."
+            )
         return await self.create(
             db, obj_in=statement_in, extra_data={"user_id": user_id}
         )

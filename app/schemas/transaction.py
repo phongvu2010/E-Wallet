@@ -3,7 +3,7 @@ from decimal import Decimal
 from enum import Enum
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class TransactionType(str, Enum):
@@ -35,7 +35,24 @@ class TransactionBase(BaseModel):
 class TransactionCreate(TransactionBase):
     """Schema tạo mới giao dịch."""
 
-    pass
+    @model_validator(mode="after")
+    def validate_transaction_types(self) -> "TransactionCreate":
+        """Xác thực các quy tắc nghiệp vụ khi tạo giao dịch theo từng loại (TRANSFER, INSTALMENT)."""
+        if self.type == TransactionType.TRANSFER:
+            if not self.destination_account_id:
+                raise ValueError(
+                    "Giao dịch chuyển khoản yêu cầu chỉ định tài khoản nhận (destination_account_id)."
+                )
+            if self.destination_account_id == self.account_id:
+                raise ValueError(
+                    "Tài khoản nhận (destination_account_id) phải khác tài khoản nguồn (account_id)."
+                )
+        if self.type == TransactionType.INSTALMENT:
+            if not self.instalment_id:
+                raise ValueError(
+                    "Giao dịch trả góp yêu cầu liên kết đến chương trình trả góp (instalment_id)."
+                )
+        return self
 
 
 class TransactionUpdate(BaseModel):
@@ -53,6 +70,20 @@ class TransactionUpdate(BaseModel):
     amount: Decimal | None = Field(None, ge=0)
     fee: Decimal | None = Field(None, ge=0)
     description: str | None = None
+
+    @model_validator(mode="after")
+    def validate_transaction_types(self) -> "TransactionUpdate":
+        """Xác thực quy tắc nghiệp vụ khi cập nhật loại giao dịch hoặc tài khoản."""
+        if (
+            self.type == TransactionType.TRANSFER
+            and self.destination_account_id is not None
+            and self.account_id is not None
+            and self.destination_account_id == self.account_id
+        ):
+            raise ValueError(
+                "Tài khoản nhận (destination_account_id) phải khác tài khoản nguồn (account_id)."
+            )
+        return self
 
 
 class TransactionResponse(TransactionBase):
