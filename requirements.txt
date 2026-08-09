@@ -1,0 +1,28 @@
+### On Windows (cmd)
+### Run project in venv
+# python -m venv .venv
+# .venv\Scripts\activate.bat
+# .venv\Scripts\python.exe -m pip install --upgrade pip
+# .venv\Scripts\python.exe -m pip install --upgrade -r requirements.txt
+
+# pip freeze > requirements.txt
+
+### On MacOS
+### Run project in venv
+# python3 -m venv .venv
+# source .venv/bin/activate
+# pip3 install --upgrade pip
+# pip3 install --upgrade -r requirements.txt
+
+# pip3 freeze > requirements.txt
+
+
+### Package
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+asyncpg>=0.29.0
+sqlalchemy>=2.0.28
+pydantic>=2.6.4
+pydantic-settings>=2.2.1
+python-jose[cryptography]>=3.3.0
+python-dotenv>=1.0.1
