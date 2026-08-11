@@ -2,7 +2,16 @@ import uuid
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import Computed, Date, ForeignKey, ForeignKeyConstraint, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import (
+    Computed,
+    Date,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 

@@ -1,7 +1,7 @@
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
@@ -16,24 +16,36 @@ class CRUDCategory(CRUDBase[Category, CategoryCreate, CategoryUpdate]):
         super().__init__(Category)
 
     async def get_multi_by_user(
-        self, db: AsyncSession, user_id: UUID
-    ) -> Sequence[Category]:
-        """Lấy danh mục riêng của người dùng kết hợp danh mục mặc định của hệ thống.
+        self, db: AsyncSession, user_id: UUID, *, skip: int = 0, limit: int = 100
+    ) -> tuple[Sequence[Category], int]:
+        """Lấy danh mục riêng của người dùng kết hợp danh mục mặc định của hệ thống kèm tổng số bản ghi.
 
         Args:
             db (AsyncSession): Session cơ sở dữ liệu bất đồng bộ.
             user_id (UUID): ID người dùng.
+            skip (int): Số lượng bản ghi bỏ qua (offset).
+            limit (int): Số lượng bản ghi tối đa (limit).
 
         Returns:
-            Sequence[Category]: Danh sách các danh mục khả dụng.
+            tuple[Sequence[Category], int]: Danh sách các danh mục khả dụng và tổng số bản ghi.
         """
-        stmt = (
+        where_clause = or_(Category.user_id == user_id, Category.user_id.is_(None))
+
+        count_stmt = select(func.count(Category.id)).where(where_clause)
+        count_res = await db.execute(count_stmt)
+        total = count_res.scalar_one()
+
+        items_stmt = (
             select(Category)
-            .where(or_(Category.user_id == user_id, Category.user_id.is_(None)))
+            .where(where_clause)
             .order_by(Category.name.asc())
+            .offset(skip)
+            .limit(limit)
         )
-        result = await db.execute(stmt)
-        return result.scalars().all()
+        items_res = await db.execute(items_stmt)
+        items = items_res.scalars().all()
+
+        return items, total
 
     @staticmethod
     def build_tree(categories: Sequence[Category]) -> list[CategoryTreeResponse]:

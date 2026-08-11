@@ -1,33 +1,43 @@
 from typing import Sequence
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
+from app.core.exceptions import handle_db_integrity_error
 from app.core.security import CurrentUser
 from app.crud.crud_account import crud_account
 from app.crud.crud_statement import crud_statement
+from app.schemas.common import PaginatedResponse
 from app.schemas.statement import StatementCreate, StatementResponse, StatementUpdate
 
 router = APIRouter(prefix="/statements", tags=["Statements"])
 
 
-@router.get("", response_model=list[StatementResponse])
+@router.get("", response_model=PaginatedResponse[StatementResponse])
 async def get_statements(
-    db: AsyncSession = Depends(get_db), user: CurrentUser = Depends(get_current_user)
-) -> Sequence[StatementResponse]:
-    """Lấy danh sách các kỳ sao kê thẻ tín dụng của người dùng.
+    skip: int = Query(0, ge=0, description="Số bản ghi bỏ qua (offset)"),
+    limit: int = Query(100, ge=1, le=200, description="Số bản ghi tối đa (limit)"),
+    db: AsyncSession = Depends(get_db),
+    user: CurrentUser = Depends(get_current_user),
+) -> PaginatedResponse[StatementResponse]:
+    """Lấy danh sách các kỳ sao kê thẻ tín dụng của người dùng (có phân trang).
 
     Args:
+        skip (int): Số bản ghi bỏ qua (offset).
+        limit (int): Số bản ghi tối đa (limit).
         db (AsyncSession): Session cơ sở dữ liệu bất đồng bộ.
         user (CurrentUser): Thông tin người dùng hiện tại đã xác thực.
 
     Returns:
-        Sequence[StatementResponse]: Danh sách bản ghi sao kê thẻ tín dụng.
+        PaginatedResponse[StatementResponse]: Danh sách bản ghi sao kê thẻ tín dụng kèm metadata phân trang.
     """
-    return await crud_statement.get_multi_by_user(db, user_id=user.id)
+    items, total = await crud_statement.get_multi_by_user(
+        db, user_id=user.id, skip=skip, limit=limit
+    )
+    return PaginatedResponse.create(items=items, total=total, skip=skip, limit=limit)
 
 
 @router.get("/{statement_id}", response_model=StatementResponse)
@@ -86,10 +96,7 @@ async def create_statement(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except IntegrityError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Dữ liệu không hợp lệ hoặc vi phạm ràng buộc cơ sở dữ liệu: {str(e.orig)}",
-        )
+        raise handle_db_integrity_error(e)
 
 
 @router.put("/{statement_id}", response_model=StatementResponse)
@@ -134,10 +141,7 @@ async def update_statement(
     try:
         return await crud_statement.update(db, db_obj=statement, obj_in=statement_in)
     except IntegrityError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Dữ liệu không hợp lệ hoặc vi phạm ràng buộc cơ sở dữ liệu: {str(e.orig)}",
-        )
+        raise handle_db_integrity_error(e)
 
 
 @router.delete("/{statement_id}", response_model=StatementResponse)
@@ -167,4 +171,8 @@ async def delete_statement(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Kỳ sao kê không tồn tại hoặc không thuộc quyền sở hữu.",
         )
-    return await crud_statement.delete(db, db_obj=statement)
+
+    try:
+        return await crud_statement.delete(db, db_obj=statement)
+    except IntegrityError as e:
+        raise handle_db_integrity_error(e)

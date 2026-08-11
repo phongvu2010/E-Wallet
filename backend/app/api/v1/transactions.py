@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
+from app.core.exceptions import handle_db_integrity_error
 from app.core.security import CurrentUser
 from app.crud.crud_transaction import crud_transaction
 from app.schemas.common import PaginatedResponse
@@ -89,10 +90,7 @@ async def create_transaction(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except IntegrityError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Dữ liệu không hợp lệ hoặc vi phạm ràng buộc cơ sở dữ liệu: {str(e.orig)}",
-        )
+        raise handle_db_integrity_error(e)
 
 
 @router.put("/{transaction_id}", response_model=TransactionResponse)
@@ -132,10 +130,7 @@ async def update_transaction(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except IntegrityError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Dữ liệu không hợp lệ hoặc vi phạm ràng buộc cơ sở dữ liệu: {str(e.orig)}",
-        )
+        raise handle_db_integrity_error(e)
 
 
 @router.delete("/{transaction_id}", response_model=TransactionResponse)
@@ -165,4 +160,8 @@ async def delete_transaction(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Giao dịch không tồn tại hoặc không thuộc quyền sở hữu của bạn.",
         )
-    return await crud_transaction.delete(db, db_obj=transaction)
+
+    try:
+        return await crud_transaction.delete(db, db_obj=transaction)
+    except IntegrityError as e:
+        raise handle_db_integrity_error(e)

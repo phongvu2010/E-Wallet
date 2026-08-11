@@ -114,32 +114,36 @@ class CRUDTransaction(CRUDBase[Transaction, TransactionCreate, TransactionUpdate
         Returns:
             tuple[Sequence[Transaction], int]: Danh sách giao dịch và tổng số bản ghi thỏa điều kiện.
         """
-        stmt = select(Transaction).where(Transaction.user_id == user_id)
+        where_clauses = [Transaction.user_id == user_id]
 
         if start_date is not None:
-            stmt = stmt.where(Transaction.transaction_date >= start_date)
+            where_clauses.append(Transaction.transaction_date >= start_date)
         if end_date is not None:
-            stmt = stmt.where(Transaction.transaction_date <= end_date)
+            where_clauses.append(Transaction.transaction_date <= end_date)
         if account_id is not None:
-            stmt = stmt.where(
+            where_clauses.append(
                 or_(
                     Transaction.account_id == account_id,
                     Transaction.destination_account_id == account_id,
                 )
             )
         if category_id is not None:
-            stmt = stmt.where(Transaction.category_id == category_id)
+            where_clauses.append(Transaction.category_id == category_id)
         if type is not None:
-            stmt = stmt.where(Transaction.type == type)
+            where_clauses.append(Transaction.type == type)
 
-        # Tính tổng số bản ghi thỏa điều kiện lọc
-        count_stmt = select(func.count()).select_from(stmt.subquery())
+        # Tính tổng số bản ghi thỏa điều kiện lọc trực tiếp (không tạo subquery)
+        count_stmt = select(func.count(Transaction.id)).where(*where_clauses)
         count_res = await db.execute(count_stmt)
         total = count_res.scalar_one()
 
         # Truy vấn danh sách bản ghi phân trang
         items_stmt = (
-            stmt.order_by(Transaction.transaction_date.desc(), Transaction.created_at.desc())
+            select(Transaction)
+            .where(*where_clauses)
+            .order_by(
+                Transaction.transaction_date.desc(), Transaction.created_at.desc()
+            )
             .offset(skip)
             .limit(limit)
         )
@@ -219,6 +223,23 @@ class CRUDTransaction(CRUDBase[Transaction, TransactionCreate, TransactionUpdate
             ValueError: Nếu quy tắc nghiệp vụ hoặc tham chiếu vi phạm.
         """
         # Hợp nhất dữ liệu hiện tại với dữ liệu cập nhật mới
+        effective_type = (
+            transaction_in.type if transaction_in.type is not None else db_obj.type
+        )
+
+        # Tự động dọn dẹp các trường tham chiếu không tương thích với loại giao dịch mới
+        if effective_type in (TransactionType.INCOME, TransactionType.EXPENSE):
+            if transaction_in.destination_account_id is None:
+                db_obj.destination_account_id = None
+            if transaction_in.instalment_id is None:
+                db_obj.instalment_id = None
+        elif effective_type == TransactionType.TRANSFER:
+            if transaction_in.instalment_id is None:
+                db_obj.instalment_id = None
+        elif effective_type == TransactionType.INSTALMENT:
+            if transaction_in.destination_account_id is None:
+                db_obj.destination_account_id = None
+
         effective_account_id = (
             transaction_in.account_id
             if transaction_in.account_id is not None
@@ -229,8 +250,15 @@ class CRUDTransaction(CRUDBase[Transaction, TransactionCreate, TransactionUpdate
             if transaction_in.destination_account_id is not None
             else db_obj.destination_account_id
         )
-        effective_type = (
-            transaction_in.type if transaction_in.type is not None else db_obj.type
+        effective_category_id = (
+            transaction_in.category_id
+            if transaction_in.category_id is not None
+            else db_obj.category_id
+        )
+        effective_statement_id = (
+            transaction_in.statement_id
+            if transaction_in.statement_id is not None
+            else db_obj.statement_id
         )
         effective_instalment_id = (
             transaction_in.instalment_id
@@ -255,15 +283,47 @@ class CRUDTransaction(CRUDBase[Transaction, TransactionCreate, TransactionUpdate
                     "Giao dịch trả góp yêu cầu liên kết đến chương trình trả góp (instalment_id)."
                 )
 
-        # Xác thực các tài nguyên tham chiếu thực sự được thay đổi
+        # Xác thực các tài nguyên tham chiếu trên trạng thái hợp nhất nếu thuộc tính thay đổi hoặc đổi loại giao dịch
+        validate_account = (
+            effective_account_id
+            if (
+                transaction_in.account_id is not None or transaction_in.type is not None
+            )
+            else None
+        )
+        validate_dest_account = (
+            effective_dest_account_id
+            if (
+                transaction_in.destination_account_id is not None
+                or (
+                    transaction_in.type == TransactionType.TRANSFER
+                    and effective_dest_account_id is not None
+                )
+            )
+            else None
+        )
+        validate_category = transaction_in.category_id
+        validate_statement = transaction_in.statement_id
+        validate_instalment = (
+            effective_instalment_id
+            if (
+                transaction_in.instalment_id is not None
+                or (
+                    transaction_in.type == TransactionType.INSTALMENT
+                    and effective_instalment_id is not None
+                )
+            )
+            else None
+        )
+
         await self.validate_references(
             db,
             user_id=user_id,
-            account_id=transaction_in.account_id,
-            destination_account_id=transaction_in.destination_account_id,
-            category_id=transaction_in.category_id,
-            statement_id=transaction_in.statement_id,
-            instalment_id=transaction_in.instalment_id,
+            account_id=validate_account,
+            destination_account_id=validate_dest_account,
+            category_id=validate_category,
+            statement_id=validate_statement,
+            instalment_id=validate_instalment,
         )
 
         return await self.update(db, db_obj=db_obj, obj_in=transaction_in)

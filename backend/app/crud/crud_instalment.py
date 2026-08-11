@@ -1,7 +1,7 @@
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
@@ -17,24 +17,36 @@ class CRUDInstalment(CRUDBase[Instalment, InstalmentCreate, InstalmentUpdate]):
         super().__init__(Instalment)
 
     async def get_multi_by_user(
-        self, db: AsyncSession, user_id: UUID
-    ) -> Sequence[Instalment]:
-        """Lấy danh sách khoản trả góp của người dùng.
+        self, db: AsyncSession, user_id: UUID, *, skip: int = 0, limit: int = 100
+    ) -> tuple[Sequence[Instalment], int]:
+        """Lấy danh sách khoản trả góp của người dùng kèm tổng số bản ghi.
 
         Args:
             db (AsyncSession): Session cơ sở dữ liệu bất đồng bộ.
             user_id (UUID): ID người dùng.
+            skip (int): Số lượng bản ghi bỏ qua (offset).
+            limit (int): Số lượng bản ghi tối đa lấy về (limit).
 
         Returns:
-            Sequence[Instalment]: Danh sách khoản trả góp.
+            tuple[Sequence[Instalment], int]: Danh sách khoản trả góp và tổng số bản ghi.
         """
-        stmt = (
+        count_stmt = select(func.count(Instalment.id)).where(
+            Instalment.user_id == user_id
+        )
+        count_res = await db.execute(count_stmt)
+        total = count_res.scalar_one()
+
+        items_stmt = (
             select(Instalment)
             .where(Instalment.user_id == user_id)
             .order_by(Instalment.created_at.desc())
+            .offset(skip)
+            .limit(limit)
         )
-        result = await db.execute(stmt)
-        return result.scalars().all()
+        items_res = await db.execute(items_stmt)
+        items = items_res.scalars().all()
+
+        return items, total
 
     async def get_by_id(
         self, db: AsyncSession, instalment_id: UUID, user_id: UUID

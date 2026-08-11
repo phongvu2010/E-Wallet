@@ -5,7 +5,7 @@ FROM python:3.12-slim AS builder
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-WORKDIR /app
+WORKDIR /src
 
 # Cài đặt các công cụ hệ thống cần thiết cho việc biên dịch C/C++ (nếu gói cần)
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -27,7 +27,7 @@ FROM python:3.12-slim AS runner
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-WORKDIR /app
+WORKDIR /src
 
 # Cài đặt các thư viện runtime tối thiểu cho PostgreSQL
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -41,11 +41,10 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy toàn bộ mã nguồn ứng dụng vào container
 COPY ./app ./app
-COPY ./init_db.sql ./init_db.sql
 
 # Tạo người dùng không phải root (non-root user) để tăng cường bảo mật
 RUN adduser --disabled-password --gecos "" appuser && \
-    chown -R appuser:appuser /app
+    chown -R appuser:appuser /src
 USER appuser
 
 # Mở cổng 8000 cho FastAPI

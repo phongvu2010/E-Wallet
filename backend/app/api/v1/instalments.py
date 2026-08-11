@@ -1,14 +1,16 @@
 from typing import Sequence
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
+from app.core.exceptions import handle_db_integrity_error
 from app.core.security import CurrentUser
 from app.crud.crud_account import crud_account
 from app.crud.crud_instalment import crud_instalment
+from app.schemas.common import PaginatedResponse
 from app.schemas.instalment import (
     InstalmentCreate,
     InstalmentResponse,
@@ -18,20 +20,28 @@ from app.schemas.instalment import (
 router = APIRouter(prefix="/instalments", tags=["Instalments"])
 
 
-@router.get("", response_model=list[InstalmentResponse])
+@router.get("", response_model=PaginatedResponse[InstalmentResponse])
 async def get_instalments(
-    db: AsyncSession = Depends(get_db), user: CurrentUser = Depends(get_current_user)
-) -> Sequence[InstalmentResponse]:
-    """Lấy danh sách tất cả các khoản giao dịch trả góp của người dùng.
+    skip: int = Query(0, ge=0, description="Số bản ghi bỏ qua (offset)"),
+    limit: int = Query(100, ge=1, le=200, description="Số bản ghi tối đa (limit)"),
+    db: AsyncSession = Depends(get_db),
+    user: CurrentUser = Depends(get_current_user),
+) -> PaginatedResponse[InstalmentResponse]:
+    """Lấy danh sách tất cả các khoản giao dịch trả góp của người dùng (có phân trang).
 
     Args:
+        skip (int): Số bản ghi bỏ qua (offset).
+        limit (int): Số bản ghi tối đa (limit).
         db (AsyncSession): Session cơ sở dữ liệu bất đồng bộ.
         user (CurrentUser): Thông tin người dùng hiện tại đã xác thực.
 
     Returns:
-        Sequence[InstalmentResponse]: Danh sách khoản giao dịch trả góp.
+        PaginatedResponse[InstalmentResponse]: Danh sách khoản giao dịch trả góp kèm metadata phân trang.
     """
-    return await crud_instalment.get_multi_by_user(db, user_id=user.id)
+    items, total = await crud_instalment.get_multi_by_user(
+        db, user_id=user.id, skip=skip, limit=limit
+    )
+    return PaginatedResponse.create(items=items, total=total, skip=skip, limit=limit)
 
 
 @router.get("/{instalment_id}", response_model=InstalmentResponse)
@@ -90,10 +100,7 @@ async def create_instalment(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except IntegrityError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Dữ liệu không hợp lệ hoặc vi phạm ràng buộc cơ sở dữ liệu: {str(e.orig)}",
-        )
+        raise handle_db_integrity_error(e)
 
 
 @router.put("/{instalment_id}", response_model=InstalmentResponse)
@@ -138,10 +145,7 @@ async def update_instalment(
     try:
         return await crud_instalment.update(db, db_obj=instalment, obj_in=instalment_in)
     except IntegrityError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Dữ liệu không hợp lệ hoặc vi phạm ràng buộc cơ sở dữ liệu: {str(e.orig)}",
-        )
+        raise handle_db_integrity_error(e)
 
 
 @router.delete("/{instalment_id}", response_model=InstalmentResponse)
@@ -171,4 +175,8 @@ async def delete_instalment(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Chương trình trả góp không tồn tại hoặc không thuộc quyền sở hữu.",
         )
-    return await crud_instalment.delete(db, db_obj=instalment)
+
+    try:
+        return await crud_instalment.delete(db, db_obj=instalment)
+    except IntegrityError as e:
+        raise handle_db_integrity_error(e)

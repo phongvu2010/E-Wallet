@@ -221,8 +221,14 @@ BEGIN
         ELSIF OLD.type IN ('expense', 'instalment') THEN
             UPDATE public.accounts SET current_balance = current_balance + OLD.total_amount WHERE id = OLD.account_id;
         ELSIF OLD.type = 'transfer' AND OLD.destination_account_id IS NOT NULL THEN
-            UPDATE public.accounts SET current_balance = current_balance + OLD.total_amount WHERE id = OLD.account_id;
-            UPDATE public.accounts SET current_balance = current_balance - OLD.amount WHERE id = OLD.destination_account_id;
+            -- Khóa và cập nhật theo thứ tự ID nhất quán để phòng chống Deadlock khi có nhiều chuyển khoản đồng thời
+            IF OLD.account_id < OLD.destination_account_id THEN
+                UPDATE public.accounts SET current_balance = current_balance + OLD.total_amount WHERE id = OLD.account_id;
+                UPDATE public.accounts SET current_balance = current_balance - OLD.amount WHERE id = OLD.destination_account_id;
+            ELSE
+                UPDATE public.accounts SET current_balance = current_balance - OLD.amount WHERE id = OLD.destination_account_id;
+                UPDATE public.accounts SET current_balance = current_balance + OLD.total_amount WHERE id = OLD.account_id;
+            END IF;
         END IF;
     END IF;
 
@@ -233,8 +239,14 @@ BEGIN
         ELSIF NEW.type IN ('expense', 'instalment') THEN
             UPDATE public.accounts SET current_balance = current_balance - NEW.total_amount WHERE id = NEW.account_id;
         ELSIF NEW.type = 'transfer' AND NEW.destination_account_id IS NOT NULL THEN
-            UPDATE public.accounts SET current_balance = current_balance - NEW.total_amount WHERE id = NEW.account_id;
-            UPDATE public.accounts SET current_balance = current_balance + NEW.amount WHERE id = NEW.destination_account_id;
+            -- Khóa và cập nhật theo thứ tự ID nhất quán để phòng chống Deadlock
+            IF NEW.account_id < NEW.destination_account_id THEN
+                UPDATE public.accounts SET current_balance = current_balance - NEW.total_amount WHERE id = NEW.account_id;
+                UPDATE public.accounts SET current_balance = current_balance + NEW.amount WHERE id = NEW.destination_account_id;
+            ELSE
+                UPDATE public.accounts SET current_balance = current_balance + NEW.amount WHERE id = NEW.destination_account_id;
+                UPDATE public.accounts SET current_balance = current_balance - NEW.total_amount WHERE id = NEW.account_id;
+            END IF;
         END IF;
     END IF;
 

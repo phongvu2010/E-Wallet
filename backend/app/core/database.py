@@ -28,13 +28,16 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         AsyncSession: Phiên kết nối cơ sở dữ liệu SQLAlchemy bất đồng bộ.
 
     Raises:
-        Exception: Đẩy các lỗi phát sinh trong phiên truy vấn ra ngoài và đảm bảo đóng session.
+        Exception: Đẩy các lỗi phát sinh trong phiên truy vấn ra ngoài và đảm bảo đóng session sạch.
     """
     async with AsyncSessionLocal() as session:
         try:
             yield session
         except Exception:
-            await session.rollback()
+            if session.is_active:
+                await session.rollback()
             raise
         finally:
+            if session.is_active and session.in_transaction():
+                await session.rollback()
             await session.close()

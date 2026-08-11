@@ -11,6 +11,7 @@ from app.api.deps import get_db
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.database import engine
+from app.core.security import jwks_client
 
 
 @asynccontextmanager
@@ -18,7 +19,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Quản lý vòng đời ứng dụng FastAPI (startup và shutdown)."""
     # Startup actions (if any)
     yield
-    # Shutdown actions: Giải phóng connection pool của Database engine
+    # Shutdown actions: Giải phóng connection pool và HTTP client
+    await jwks_client.close()
     await engine.dispose()
 
 

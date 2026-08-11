@@ -78,10 +78,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj_in_data = obj_in.model_dump()
         if extra_data:
             obj_in_data.update(extra_data)
+
         db_obj = self.model(**obj_in_data)
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
+
         return db_obj
 
     async def update(
@@ -112,6 +114,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
         await db.commit()
         await db.refresh(db_obj)
+
         return db_obj
 
     async def delete(self, db: AsyncSession, *, db_obj: ModelType) -> ModelType:
@@ -126,4 +129,5 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """
         await db.delete(db_obj)
         await db.commit()
+
         return db_obj

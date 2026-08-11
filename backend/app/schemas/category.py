@@ -57,3 +57,6 @@ class CategoryTreeResponse(CategoryResponse):
     """Schema phản hồi thông tin danh mục theo dạng cây phân cấp Cha - Con."""
 
     children: list["CategoryTreeResponse"] = []
+
+
+CategoryTreeResponse.model_rebuild()

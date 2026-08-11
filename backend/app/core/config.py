@@ -22,7 +22,9 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"
     DATABASE_URL: str
-    SUPABASE_JWT_SECRET: str
+    SUPABASE_URL: str | None = None
+    SUPABASE_JWT_SECRET: str | None = None
+    SUPABASE_JWKS_URL: str | None = None
     SUPABASE_JWT_AUDIENCE: str = "authenticated"
     ALGORITHM: str = "HS256"
     BACKEND_CORS_ORIGINS: list[str] = [
@@ -31,6 +33,17 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
     ]
+
+    @property
+    def jwks_url(self) -> str | None:
+        """Đường dẫn công khai JWKS từ Supabase dùng cho thuật toán RS256."""
+        if self.SUPABASE_JWKS_URL:
+            return self.SUPABASE_JWKS_URL
+
+        if self.SUPABASE_URL:
+            return f"{self.SUPABASE_URL.rstrip('/')}/auth/v1/.well-known/jwks.json"
+
+        return None
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
@@ -60,4 +73,3 @@ class Settings(BaseSettings):
 
 
 settings: Settings = Settings()
-

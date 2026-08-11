@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Sequence
 from uuid import UUID
 
@@ -16,24 +17,34 @@ class CRUDAccount(CRUDBase[Account, AccountCreate, AccountUpdate]):
         super().__init__(Account)
 
     async def get_multi_by_user(
-        self, db: AsyncSession, user_id: UUID
-    ) -> Sequence[Account]:
-        """Lấy danh sách tất cả tài khoản thuộc sở hữu của một người dùng.
+        self, db: AsyncSession, user_id: UUID, *, skip: int = 0, limit: int = 100
+    ) -> tuple[Sequence[Account], int]:
+        """Lấy danh sách tất cả tài khoản thuộc sở hữu của một người dùng có phân trang kèm tổng số bản ghi.
 
         Args:
             db (AsyncSession): Session cơ sở dữ liệu bất đồng bộ.
             user_id (UUID): ID của người dùng.
+            skip (int): Số lượng bản ghi bỏ qua (offset).
+            limit (int): Số lượng bản ghi tối đa lấy về (limit).
 
         Returns:
-            Sequence[Account]: Danh sách các tài khoản của người dùng.
+            tuple[Sequence[Account], int]: Danh sách các tài khoản và tổng số bản ghi.
         """
-        stmt = (
+        count_stmt = select(func.count(Account.id)).where(Account.user_id == user_id)
+        count_res = await db.execute(count_stmt)
+        total = count_res.scalar_one()
+
+        items_stmt = (
             select(Account)
             .where(Account.user_id == user_id)
             .order_by(Account.created_at.desc())
+            .offset(skip)
+            .limit(limit)
         )
-        result = await db.execute(stmt)
-        return result.scalars().all()
+        items_res = await db.execute(items_stmt)
+        items = items_res.scalars().all()
+
+        return items, total
 
     async def get_by_id(
         self, db: AsyncSession, account_id: UUID, user_id: UUID
@@ -71,7 +82,7 @@ class CRUDAccount(CRUDBase[Account, AccountCreate, AccountUpdate]):
 
     async def recalculate_balance(
         self, db: AsyncSession, account_id: UUID, user_id: UUID
-    ) -> float | None:
+    ) -> Decimal | None:
         """Gọi Stored Procedure recalculate_account_balance để tính toán lại số dư tài khoản.
 
         Args:
@@ -80,11 +91,14 @@ class CRUDAccount(CRUDBase[Account, AccountCreate, AccountUpdate]):
             user_id (UUID): ID người dùng sở hữu.
 
         Returns:
-            float | None: Số dư mới sau khi tính toán.
+            Decimal | None: Số dư mới sau khi tính toán.
         """
         stmt = select(func.public.recalculate_account_balance(account_id, user_id))
         result = await db.execute(stmt)
-        return result.scalar_one_or_none()
+        new_balance = result.scalar_one_or_none()
+        await db.commit()
+
+        return new_balance
 
 
 crud_account = CRUDAccount()
