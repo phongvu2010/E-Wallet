@@ -155,24 +155,28 @@ E-Wallet/
 
 ---
 
-### 3. Khởi Chạy Với Docker
+### 3. Khởi Chạy Với Docker (Full-Stack Backend + Frontend)
 
-#### Khởi chạy bằng Docker Compose (từ thư mục gốc `E-Wallet`)
+#### Khởi chạy bằng Docker Compose (Khuyên dùng)
+Đứng tại thư mục gốc `E-Wallet` và thực thi:
 ```bash
 docker-compose up --build -d
 ```
 
-#### Khởi chạy trực tiếp bằng Docker Engine
-```bash
-# Build Image (Chỉ định đúng vị trí Dockerfile trong thư mục backend)
-docker build -t tai-chinh-api -f backend/Dockerfile ./backend
+Sau khi khởi chạy thành công:
+- **Frontend App (React + Nginx)**: Truy cập tại [http://localhost:3000](http://localhost:3000)
+- **Backend API (FastAPI)**: Truy cập tại [http://localhost:8000](http://localhost:8000)
+- **Swagger API Docs**: Truy cập tại [http://localhost:8000/docs](http://localhost:8000/docs)
 
-# Run Container
-docker run -d \
-  --name tai_chinh_api \
-  -p 8000:8000 \
-  --env-file backend/.env \
-  tai-chinh-api
+#### Khởi chạy riêng lẻ từng Container bằng Docker Engine
+```bash
+# 1. Build & Run Backend API Container
+docker build -t tai-chinh-api -f backend/Dockerfile ./backend
+docker run -d --name tai_chinh_api -p 8000:8000 --env-file backend/.env tai-chinh-api
+
+# 2. Build & Run Frontend Web Container
+docker build -t tai-chinh-web -f frontend/Dockerfile ./frontend
+docker run -d --name tai_chinh_web -p 3000:80 tai-chinh-web
 ```
 
 ---

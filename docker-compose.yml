@@ -2,19 +2,31 @@ services:
   # Dịch vụ Backend FastAPI
   api:
     build: ./backend
-    container_name: api
+    container_name: wallet_backend_api
     env_file:
       - ./backend/.env
     volumes:
       - ./backend/app:/src/app
     ports:
-      - 8000:8000
+      - "8000:8000"
     networks:
       - wallet_network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     restart: unless-stopped
 
+  # Dịch vụ Frontend React + Vite (Nginx Web Server)
+  web:
+    build: ./frontend
+    container_name: wallet_frontend_web
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - wallet_network
+    restart: unless-stopped
+
 networks:
   wallet_network:
-    name: network-bridge
+    name: wallet_network
     driver: bridge

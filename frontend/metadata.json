@@ -1,0 +1,6 @@
+{
+  "name": "FinFlow - E-Wallet & Personal Finance",
+  "description": "Clean, modern dashboard and API-ready personal finance app connecting to FastAPI v1 REST API",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
