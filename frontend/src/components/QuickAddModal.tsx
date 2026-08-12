@@ -93,16 +93,16 @@ export const QuickAddModal: React.FC = () => {
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4">
           {/* Transaction Type Tabs */}
           <div>
-            <label className="block text-xs font-semibold uppercase text-slate-400 dark:text-slate-500 mb-2">
+            <label className="block text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-2 tracking-wider">
               Loại giao dịch
             </label>
-            <div className="grid grid-cols-4 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl">
+            <div className="grid grid-cols-4 gap-1.5 p-1 bg-slate-100/80 dark:bg-slate-800/80 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
               <button
                 type="button"
                 onClick={() => { setType('expense'); setCategoryId(''); }}
-                className={`py-2 text-xs font-semibold rounded-lg transition-all ${
+                className={`py-2 text-xs font-bold rounded-lg transition-all ${
                   type === 'expense'
-                    ? 'bg-rose-500 text-white shadow-sm'
+                    ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 shadow-2xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -111,9 +111,9 @@ export const QuickAddModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => { setType('income'); setCategoryId(''); }}
-                className={`py-2 text-xs font-semibold rounded-lg transition-all ${
+                className={`py-2 text-xs font-bold rounded-lg transition-all ${
                   type === 'income'
-                    ? 'bg-emerald-500 text-white shadow-sm'
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 shadow-2xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -122,9 +122,9 @@ export const QuickAddModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => { setType('transfer'); setCategoryId(''); }}
-                className={`py-2 text-xs font-semibold rounded-lg transition-all ${
+                className={`py-2 text-xs font-bold rounded-lg transition-all ${
                   type === 'transfer'
-                    ? 'bg-sky-500 text-white shadow-sm'
+                    ? 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60 shadow-2xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -133,9 +133,9 @@ export const QuickAddModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => { setType('instalment'); setCategoryId(''); }}
-                className={`py-2 text-xs font-semibold rounded-lg transition-all ${
+                className={`py-2 text-xs font-bold rounded-lg transition-all ${
                   type === 'instalment'
-                    ? 'bg-amber-500 text-white shadow-sm'
+                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 shadow-2xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -143,6 +143,7 @@ export const QuickAddModal: React.FC = () => {
               </button>
             </div>
           </div>
+
 
           {/* Amount & Currency Preview */}
           <div>

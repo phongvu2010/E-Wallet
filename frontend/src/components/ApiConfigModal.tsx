@@ -44,14 +44,14 @@ export const ApiConfigModal: React.FC = () => {
         {/* Modal Form */}
         <form onSubmit={handleSave} className="p-6 space-y-4">
           {/* Mode Switcher */}
-          <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
+          <div className="p-4 rounded-2xl bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                  <Database className="w-4 h-4 text-emerald-400" />
+                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <Database className="w-4 h-4 text-emerald-500" />
                   Chế độ kết nối API Live
                 </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
                   Bật để gọi trực tiếp các Endpoint RESTful v1 tới FastAPI server
                 </p>
               </div>
@@ -63,14 +63,14 @@ export const ApiConfigModal: React.FC = () => {
                   onChange={(e) => setIsLiveMode(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500" />
+                <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600" />
               </label>
             </div>
           </div>
 
           {/* Base URL */}
           <div>
-            <label className="block text-xs font-semibold uppercase text-slate-400 dark:text-slate-500 mb-1">
+            <label className="block text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-1.5 tracking-wider">
               FastAPI Base URL
             </label>
             <div className="relative">
@@ -84,14 +84,14 @@ export const ApiConfigModal: React.FC = () => {
                 value={baseUrl}
                 onChange={(e) => setBaseUrl(e.target.value)}
                 disabled={!isLiveMode}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 disabled:opacity-50 transition-all"
               />
             </div>
           </div>
 
           {/* JWT Bearer Token */}
           <div>
-            <label className="block text-xs font-semibold uppercase text-slate-400 dark:text-slate-500 mb-1">
+            <label className="block text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-1.5 tracking-wider">
               JWT Bearer Token (HTTPBearer)
             </label>
             <div className="relative">
@@ -105,13 +105,14 @@ export const ApiConfigModal: React.FC = () => {
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
                 disabled={!isLiveMode}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 disabled:opacity-50 transition-all"
               />
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-              Header sẽ gửi kèm: <code className="text-emerald-500 font-mono">Authorization: Bearer &lt;token&gt;</code>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
+              Header sẽ gửi kèm: <code className="text-emerald-600 dark:text-emerald-400 font-mono font-semibold">Authorization: Bearer &lt;token&gt;</code>
             </p>
           </div>
+
 
           {/* Health Check Bar */}
           {isLiveMode && (

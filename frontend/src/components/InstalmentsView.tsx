@@ -108,7 +108,7 @@ export const InstalmentsView: React.FC = () => {
           return (
             <div
               key={ins.id}
-              className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between"
+              className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm shadow-slate-200/50 flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
@@ -116,28 +116,29 @@ export const InstalmentsView: React.FC = () => {
                     <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
                       {ins.product_name}
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                       Tài khoản: {acc?.account_name || 'N/A'} • Ngày tạo: {formatDate(ins.transaction_date)}
                     </p>
                   </div>
-                  <span className={`text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full ${
+                  <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
                     ins.status === 'active'
-                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                      : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                      ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60'
+                      : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60'
                   }`}>
                     {ins.status === 'active' ? 'Đang trả' : 'Đã hoàn tất'}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 my-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-center">
+                <div className="grid grid-cols-3 gap-2 my-4 p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/60 text-center text-xs">
                   <div>
-                    <span className="text-[10px] text-slate-400 font-semibold uppercase block">Tổng giá trị</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Tổng giá trị</span>
                     <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{formatCurrency(total)}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 font-semibold uppercase block">Kỳ hạn</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Kỳ hạn</span>
                     <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{ins.term_months} tháng</span>
                   </div>
+
                   <div>
                     <span className="text-[10px] text-slate-400 font-semibold uppercase block">Mỗi tháng</span>
                     <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400">{formatCurrency(monthly)}</span>

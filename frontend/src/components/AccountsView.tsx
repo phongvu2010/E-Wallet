@@ -123,56 +123,56 @@ export const AccountsView: React.FC = () => {
           return (
             <div
               key={acc.id}
-              className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:border-emerald-500/40 transition-all group flex flex-col justify-between"
+              className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm shadow-slate-200/50 hover:border-emerald-500/40 transition-all group flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 shrink-0">
+                    <div className="p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 shrink-0">
                       {getTypeIcon(acc.account_type)}
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">
                         {acc.account_name}
                       </h3>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                         {acc.bank_name || acc.account_type}
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                  <span className="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
                     {acc.account_type}
                   </span>
                 </div>
 
                 {/* Account Details */}
-                <div className="mt-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-1 text-xs">
+                <div className="mt-4 p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-1.5 text-xs">
                   {acc.account_number && (
-                    <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                    <div className="flex justify-between text-slate-500 dark:text-slate-400 font-medium">
                       <span>Số tài khoản:</span>
-                      <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{acc.account_number}</span>
+                      <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{acc.account_number}</span>
                     </div>
                   )}
                   {acc.card_holder_name && (
-                    <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                    <div className="flex justify-between text-slate-500 dark:text-slate-400 font-medium">
                       <span>Chủ tài khoản:</span>
-                      <span className="font-semibold text-slate-700 dark:text-slate-300 uppercase">{acc.card_holder_name}</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200 uppercase">{acc.card_holder_name}</span>
                     </div>
                   )}
                   {isCredit && (
-                    <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                    <div className="flex justify-between text-slate-500 dark:text-slate-400 font-medium">
                       <span>Hạn mức tín dụng:</span>
-                      <span className="font-semibold text-amber-600 dark:text-amber-400">{formatCurrency(acc.current_credit_limit)}</span>
+                      <span className="font-semibold text-amber-700 dark:text-amber-400">{formatCurrency(acc.current_credit_limit)}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Balance Display */}
                 <div className="mt-4">
-                  <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
+                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
                     {isCredit ? 'Dư nợ hiện tại' : 'Số dư khả dụng'}
                   </span>
-                  <div className={`text-xl font-extrabold mt-0.5 ${
+                  <div className={`text-xl sm:text-2xl font-extrabold mt-0.5 ${
                     isCredit ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
                   }`}>
                     {formatCurrency(balance)}
@@ -181,10 +181,10 @@ export const AccountsView: React.FC = () => {
               </div>
 
               {/* Account Controls Footer */}
-              <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+              <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
                 <button
                   onClick={() => recalculateBalance(acc.id)}
-                  className="text-xs font-medium text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 flex items-center gap-1.5 transition-colors"
+                  className="text-xs font-semibold text-slate-500 hover:text-emerald-700 dark:text-slate-400 dark:hover:text-emerald-400 flex items-center gap-1.5 transition-colors"
                   title="Tính toán lại số dư từ toàn bộ lịch sử giao dịch (/recalculate-balance)"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -201,11 +201,9 @@ export const AccountsView: React.FC = () => {
                   </button>
                   <button
                     onClick={() => {
-                      if (confirm(`Bạn có chắc muốn xóa tài khoản ${acc.account_name}?`)) {
-                        deleteAccount(acc.id);
-                      }
+                      if (confirm(`Xóa tài khoản ${acc.account_name}?`)) deleteAccount(acc.id);
                     }}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
                     title="Xóa tài khoản"
                   >
                     <Trash2 className="w-4 h-4" />

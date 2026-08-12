@@ -108,20 +108,20 @@ export const DashboardView: React.FC = () => {
   return (
     <div id="dashboard-view" className="space-y-6 animate-in fade-in duration-300">
       {/* Top Banner & Quick Greeting */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-emerald-900/40 via-teal-900/20 to-slate-900 border border-emerald-500/20 shadow-lg">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-slate-100 dark:from-emerald-950/40 dark:via-slate-900 dark:to-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-100 flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <span>Tổng quan Tài chính Cá nhân</span>
-            <Sparkles className="w-5 h-5 text-emerald-400 animate-bounce" />
+            <Sparkles className="w-5 h-5 text-emerald-500 animate-bounce" />
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
             Theo dõi dòng tiền, phân bổ chi tiêu và quản lý trả góp theo thời gian thực.
           </p>
         </div>
         <button
           id="btn-dashboard-quick-add"
           onClick={() => setIsQuickAddOpen(true)}
-          className="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm shadow-md shadow-emerald-600/30 transition-all flex items-center gap-2 shrink-0"
+          className="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-semibold text-xs sm:text-sm shadow-sm shadow-emerald-600/20 transition-all flex items-center gap-2 shrink-0"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>Ghi nhận giao dịch</span>
@@ -131,90 +131,91 @@ export const DashboardView: React.FC = () => {
       {/* Overview Stat Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Net Assets */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm shadow-slate-200/50 dark:shadow-slate-900/50 relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
               Tổng tài sản có
             </span>
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
             <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
               {formatCurrency(stats.netAssets)}
             </h3>
-            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1 flex items-center gap-1">
+            <p className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold mt-1 flex items-center gap-1">
               <span>{accounts.filter((a) => a.account_type !== 'Credit Card').length} tài khoản thanh toán</span>
             </p>
           </div>
         </div>
 
         {/* Credit Card Debt */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm shadow-slate-200/50 dark:shadow-slate-900/50 relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
               Dư nợ Thẻ Tín Dụng
             </span>
-            <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
-              <CreditCard className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60 flex items-center justify-center">
+              <CreditCard className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
             <h3 className="text-xl sm:text-2xl font-extrabold text-rose-600 dark:text-rose-400 tracking-tight">
               {formatCurrency(stats.creditDebt)}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
               Khoản nợ cần thanh toán kỳ sao kê
             </p>
           </div>
         </div>
 
         {/* Monthly Income */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm shadow-slate-200/50 dark:shadow-slate-900/50 relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
               Thu nhập tháng này
             </span>
-            <div className="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-500 flex items-center justify-center">
-              <ArrowUpRight className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-400 border border-teal-200/60 dark:border-teal-800/60 flex items-center justify-center">
+              <ArrowUpRight className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <h3 className="text-xl sm:text-2xl font-extrabold text-teal-600 dark:text-teal-400 tracking-tight">
+            <h3 className="text-xl sm:text-2xl font-extrabold text-teal-700 dark:text-teal-400 tracking-tight">
               +{formatCurrency(stats.monthIncome)}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
               Tháng {new Date().getMonth() + 1}/{new Date().getFullYear()}
             </p>
           </div>
         </div>
 
         {/* Monthly Expense */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm shadow-slate-200/50 dark:shadow-slate-900/50 relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
               Chi tiêu tháng này
             </span>
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-              <ArrowDownRight className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60 flex items-center justify-center">
+              <ArrowDownRight className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <h3 className="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 tracking-tight">
+            <h3 className="text-xl sm:text-2xl font-extrabold text-amber-700 dark:text-amber-400 tracking-tight">
               -{formatCurrency(stats.monthExpense)}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
               Bao gồm cả khoản trả góp
             </p>
           </div>
         </div>
       </div>
 
+
       {/* Visualizations Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Category Expense Pie Chart */}
-        <div className="lg:col-span-5 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-5 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm shadow-slate-200/50 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -254,7 +255,7 @@ export const DashboardView: React.FC = () => {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-[240px] flex items-center justify-center text-xs text-slate-400">
+              <div className="h-[240px] flex items-center justify-center text-xs text-slate-400 font-medium">
                 Chưa có dữ liệu chi tiêu để hiển thị
               </div>
             )}
@@ -275,14 +276,14 @@ export const DashboardView: React.FC = () => {
         </div>
 
         {/* Balance & Cashflow Line/Area Chart */}
-        <div className="lg:col-span-7 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="lg:col-span-7 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm shadow-slate-200/50">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-emerald-500" />
                 Biến động Dòng tiền (Thu vs Chi)
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Biểu đồ so sánh theo các ngày giao dịch gần đây</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">Biểu đồ so sánh theo các ngày giao dịch gần đây</p>
             </div>
           </div>
           {trendData.length > 0 ? (
@@ -319,7 +320,7 @@ export const DashboardView: React.FC = () => {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-[280px] flex items-center justify-center text-xs text-slate-400">
+            <div className="h-[280px] flex items-center justify-center text-xs text-slate-400 font-medium">
               Chưa có dữ liệu biến động dòng tiền
             </div>
           )}
@@ -329,7 +330,8 @@ export const DashboardView: React.FC = () => {
       {/* Bottom Row: Instalments Progress & Recent Transactions */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Instalments Summary Widget */}
-        <div className="lg:col-span-5 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-5 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm shadow-slate-200/50 flex flex-col justify-between">
+
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -376,7 +378,7 @@ export const DashboardView: React.FC = () => {
         </div>
 
         {/* Recent Transactions List */}
-        <div className="lg:col-span-7 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="lg:col-span-7 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm shadow-slate-200/50">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
               Lịch sử Giao dịch Gần đây
@@ -399,16 +401,16 @@ export const DashboardView: React.FC = () => {
               return (
                 <div
                   key={tx.id}
-                  className="p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors flex items-center justify-between gap-3"
+                  className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 hover:bg-slate-100/70 dark:hover:bg-slate-800/80 transition-colors flex items-center justify-between gap-3"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-bold text-xs ${
                         isIncome
-                          ? 'bg-emerald-500/10 text-emerald-500'
+                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/60'
                           : isTransfer
-                          ? 'bg-sky-500/10 text-sky-500'
-                          : 'bg-rose-500/10 text-rose-500'
+                          ? 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-400 border border-sky-200/60'
+                          : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200/60'
                       }`}
                     >
                       {isIncome ? '+' : isTransfer ? <ArrowRightLeft className="w-4 h-4" /> : '-'}
@@ -417,10 +419,10 @@ export const DashboardView: React.FC = () => {
                       <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
                         {tx.transaction_detail}
                       </p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5 font-medium">
                         <span>{formatDate(tx.transaction_date)}</span>
                         <span>•</span>
-                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">{cat?.name || tx.type}</span>
+                        <span className="text-emerald-700 dark:text-emerald-400 font-semibold">{cat?.name || tx.type}</span>
                       </p>
                     </div>
                   </div>
@@ -440,6 +442,7 @@ export const DashboardView: React.FC = () => {
           </div>
         </div>
       </div>
+
     </div>
   );
 };

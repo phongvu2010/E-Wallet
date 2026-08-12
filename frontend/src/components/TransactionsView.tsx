@@ -168,7 +168,7 @@ export const TransactionsView: React.FC = () => {
       </div>
 
       {/* Filter Control Bar */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm shadow-slate-200/50 space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           {/* Search Input */}
           <div className="relative flex-1">
@@ -181,19 +181,19 @@ export const TransactionsView: React.FC = () => {
               placeholder="Tìm kiếm theo tên giao dịch, số tiền, ghi chú..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-800 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
             />
           </div>
 
           {/* Transaction Type Filter Tabs */}
-          <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl overflow-x-auto shrink-0">
+          <div className="flex items-center p-1 bg-slate-100/80 dark:bg-slate-800/80 rounded-xl overflow-x-auto shrink-0 border border-slate-200/60 dark:border-slate-700/60">
             {['all', 'income', 'expense', 'transfer', 'instalment'].map((t) => (
               <button
                 key={t}
                 onClick={() => setSelectedType(t)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase transition-all whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all whitespace-nowrap ${
                   selectedType === t
-                    ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                    ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-2xs'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'
                 }`}
               >
@@ -210,7 +210,7 @@ export const TransactionsView: React.FC = () => {
             <select
               value={selectedAccountId}
               onChange={(e) => setSelectedAccountId(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300"
+              className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300 font-medium"
             >
               <option value="all">-- Tất cả tài khoản --</option>
               {accounts.map((acc) => (
@@ -224,7 +224,7 @@ export const TransactionsView: React.FC = () => {
             <select
               value={selectedCategoryId}
               onChange={(e) => setSelectedCategoryId(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300"
+              className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300 font-medium"
             >
               <option value="all">-- Tất cả danh mục --</option>
               {categories.map((cat) => (
@@ -239,7 +239,7 @@ export const TransactionsView: React.FC = () => {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300"
+              className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300 font-medium"
               placeholder="Từ ngày"
             />
           </div>
@@ -250,12 +250,12 @@ export const TransactionsView: React.FC = () => {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300"
+              className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300 font-medium"
               placeholder="Đến ngày"
             />
             <button
               onClick={resetFilters}
-              className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 shrink-0"
+              className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 shrink-0 transition-colors"
               title="Đặt lại bộ lọc"
             >
               <X className="w-4 h-4" />
@@ -265,29 +265,30 @@ export const TransactionsView: React.FC = () => {
       </div>
 
       {/* Filter Summary Banner */}
-      <div className="grid grid-cols-3 gap-3 p-3.5 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 text-xs">
+      <div className="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-100/70 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/60 text-xs">
         <div>
-          <span className="text-slate-400 font-medium">Tổng thu:</span>
-          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+          <span className="text-slate-400 font-semibold uppercase tracking-wider">Tổng thu:</span>
+          <p className="text-sm sm:text-base font-extrabold text-emerald-700 dark:text-emerald-400 mt-0.5">
             +{formatCurrency(filteredSummary.income)}
           </p>
         </div>
         <div>
-          <span className="text-slate-400 font-medium">Tổng chi:</span>
-          <p className="text-sm font-bold text-rose-600 dark:text-rose-400 mt-0.5">
+          <span className="text-slate-400 font-semibold uppercase tracking-wider">Tổng chi:</span>
+          <p className="text-sm sm:text-base font-extrabold text-rose-600 dark:text-rose-400 mt-0.5">
             -{formatCurrency(filteredSummary.expense)}
           </p>
         </div>
         <div>
-          <span className="text-slate-400 font-medium">Chênh lệch:</span>
-          <p className={`text-sm font-bold mt-0.5 ${filteredSummary.balance >= 0 ? 'text-teal-500' : 'text-rose-500'}`}>
+          <span className="text-slate-400 font-semibold uppercase tracking-wider">Chênh lệch:</span>
+          <p className={`text-sm sm:text-base font-extrabold mt-0.5 ${filteredSummary.balance >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-rose-600 dark:text-rose-400'}`}>
             {formatCurrency(filteredSummary.balance)}
           </p>
         </div>
       </div>
 
-      {/* Transactions Table */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-x-auto shadow-sm">
+      {/* Transactions Table Container */}
+      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 overflow-x-auto shadow-sm shadow-slate-200/50">
+
         <table className="w-full text-left text-xs">
           <thead className="bg-slate-50 dark:bg-slate-800/60 uppercase text-slate-400 border-b border-slate-200 dark:border-slate-800 font-semibold tracking-wider">
             <tr>

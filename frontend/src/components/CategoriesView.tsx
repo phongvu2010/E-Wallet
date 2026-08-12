@@ -117,25 +117,25 @@ export const CategoriesView: React.FC = () => {
           {categoryTree.map((item) => (
             <div
               key={item.id}
-              className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3"
+              className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm shadow-slate-200/50 space-y-3"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <span
-                    className="w-3.5 h-3.5 rounded-full shrink-0"
+                    className="w-3.5 h-3.5 rounded-full shrink-0 ring-2 ring-slate-100 dark:ring-slate-800"
                     style={{ backgroundColor: item.color || '#10B981' }}
                   />
                   <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                     {item.name}
                   </h3>
-                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                  <span className="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
                     {item.type}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => openEditModal(item)}
-                    className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
@@ -143,7 +143,7 @@ export const CategoriesView: React.FC = () => {
                     onClick={() => {
                       if (confirm(`Xóa danh mục ${item.name}?`)) deleteCategory(item.id);
                     }}
-                    className="p-1 rounded text-slate-400 hover:text-rose-500"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -151,23 +151,23 @@ export const CategoriesView: React.FC = () => {
               </div>
 
               {item.children && item.children.length > 0 && (
-                <div className="pl-4 border-l-2 border-slate-100 dark:border-slate-800 space-y-2 mt-2">
+                <div className="pl-4 border-l-2 border-slate-100 dark:border-slate-800/80 space-y-2 mt-2">
                   {item.children.map((child) => (
                     <div
                       key={child.id}
-                      className="flex items-center justify-between text-xs p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40"
+                      className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800/60"
                     >
                       <div className="flex items-center gap-2">
                         <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="font-medium text-slate-700 dark:text-slate-300">{child.name}</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">{child.name}</span>
                       </div>
                       <button
                         onClick={() => {
                           if (confirm(`Xóa danh mục con ${child.name}?`)) deleteCategory(child.id);
                         }}
-                        className="text-slate-400 hover:text-rose-500"
+                        className="text-slate-400 hover:text-rose-500 transition-colors"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ))}
@@ -177,7 +177,8 @@ export const CategoriesView: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 overflow-hidden shadow-sm shadow-slate-200/50">
+
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60 uppercase text-slate-400 border-b border-slate-200 dark:border-slate-800 font-semibold">
               <tr>

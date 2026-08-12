@@ -108,7 +108,7 @@ export const StatementsView: React.FC = () => {
           return (
             <div
               key={stm.id}
-              className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between"
+              className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm shadow-slate-200/50 flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
@@ -116,28 +116,29 @@ export const StatementsView: React.FC = () => {
                     <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
                       {acc?.account_name || 'Thẻ tín dụng'}
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                       Kỳ sao kê: {formatDate(stm.statement_date)}
                     </p>
                   </div>
-                  <span className="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-500 border border-rose-500/20 text-xs font-bold flex items-center gap-1">
+                  <span className="px-3 py-1 rounded-full bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/60 text-xs font-bold flex items-center gap-1.5">
                     <AlertCircle className="w-3.5 h-3.5" />
                     Hạn: {formatDate(stm.payment_due_date)}
                   </span>
                 </div>
 
-                <div className="my-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-2">
+                <div className="my-4 p-4 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/60 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-500">Tổng dư nợ sao kê:</span>
-                    <span className="text-base font-extrabold text-rose-600 dark:text-rose-400">{formatCurrency(total)}</span>
+                    <span className="text-xs text-slate-500 font-medium">Tổng dư nợ sao kê:</span>
+                    <span className="text-base sm:text-lg font-extrabold text-rose-600 dark:text-rose-400">{formatCurrency(total)}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500">Thanh toán tối thiểu:</span>
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">{formatCurrency(min)}</span>
+                    <span className="text-slate-500 font-medium">Thanh toán tối thiểu:</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{formatCurrency(min)}</span>
                   </div>
                   {rwd > 0 && (
-                    <div className="flex justify-between items-center text-xs pt-1 border-t border-slate-200 dark:border-slate-700">
-                      <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
+                    <div className="flex justify-between items-center text-xs pt-1.5 border-t border-slate-200/80 dark:border-slate-700/80">
+                      <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1 font-semibold">
+
                         <Gift className="w-3.5 h-3.5" /> Cashback / Điểm thưởng:
                       </span>
                       <span className="font-bold text-emerald-600 dark:text-emerald-400">+{formatCurrency(rwd)}</span>
