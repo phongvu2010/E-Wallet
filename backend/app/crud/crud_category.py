@@ -59,7 +59,19 @@ class CRUDCategory(CRUDBase[Category, CategoryCreate, CategoryUpdate]):
         """
         nodes: dict[UUID, CategoryTreeResponse] = {}
         for cat in categories:
-            nodes[cat.id] = CategoryTreeResponse.model_validate(cat)
+            nodes[cat.id] = CategoryTreeResponse(
+                id=cat.id,
+                user_id=cat.user_id,
+                parent_id=cat.parent_id,
+                name=cat.name,
+                type=cat.type,  # type: ignore
+                icon=cat.icon,
+                color=cat.color,
+                description=cat.description,
+                created_at=cat.created_at,
+                updated_at=cat.updated_at,
+                children=[],
+            )
 
         roots: list[CategoryTreeResponse] = []
         for cat in categories:

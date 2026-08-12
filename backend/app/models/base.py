@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, func
+from sqlalchemy import Column, DateTime, Table, func
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -8,6 +9,16 @@ class Base(DeclarativeBase):
     """Lớp cơ sở cho toàn bộ các ORM models trong ứng dụng."""
 
     pass
+
+
+# Đăng ký bảng tham chiếu ngoại auth.users từ Supabase Auth trong Base.metadata
+# để ngăn lỗi NoReferencedTableError khi SQLAlchemy sắp xếp phụ thuộc bảng
+Table(
+    "users",
+    Base.metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    schema="auth",
+)
 
 
 class TimestampMixin:

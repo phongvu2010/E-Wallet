@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS public.categories (
     color VARCHAR(20),
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
     CONSTRAINT unique_category_per_parent UNIQUE NULLS NOT DISTINCT (user_id, parent_id, name) -- Lưu ý: Cú pháp NULLS NOT DISTINCT yêu cầu PostgreSQL >= 15 (Supabase mặc định hỗ trợ)
 );
 
