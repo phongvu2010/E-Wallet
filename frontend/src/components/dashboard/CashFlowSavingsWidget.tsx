@@ -16,7 +16,7 @@ import { Card } from "../common/Card";
 import { Spinner } from "../common/Spinner";
 
 export const CashFlowSavingsWidget: React.FC = () => {
-  const { data: cashFlowList = [], isLoading: cfLoading } = useCashFlow(1);
+  const { data: cashFlowList = [], isLoading: cfLoading } = useCashFlow(12);
   const { data: overview, isLoading: ovLoading } = useDashboardOverview();
 
   if ((cfLoading && !overview) || (ovLoading && !overview)) {
@@ -27,17 +27,28 @@ export const CashFlowSavingsWidget: React.FC = () => {
     );
   }
 
-  // Current month cash flow
-  const latestCf = cashFlowList.length > 0 ? cashFlowList[0] : null;
+  const now = new Date();
+  const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const currentMonthCf = cashFlowList.find(
+    (cf) => cf.month && String(cf.month).startsWith(currentMonthPrefix)
+  );
 
-  const income = latestCf
-    ? Number(latestCf.total_income)
+  // Kiểm tra khoản lương tháng sau đã nhận trước trong khoảng 26-31 tháng này
+  const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const nextMonthPrefix = `${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth() + 1).padStart(2, "0")}`;
+  const nextMonthCf = cashFlowList.find(
+    (cf) => cf.month && String(cf.month).startsWith(nextMonthPrefix)
+  );
+  const nextMonthSalaryIncome = nextMonthCf ? Number(nextMonthCf.total_income) : 0;
+
+  const income = currentMonthCf
+    ? Number(currentMonthCf.total_income)
     : overview
     ? Number(overview.monthly_income_current_month || 0)
     : 0;
 
-  const expense = latestCf
-    ? Number(latestCf.total_expense)
+  const expense = currentMonthCf
+    ? Number(currentMonthCf.total_expense)
     : overview
     ? Number(overview.monthly_spending_current_month || 0)
     : 0;
@@ -164,6 +175,18 @@ export const CashFlowSavingsWidget: React.FC = () => {
               : "Chi tiêu trong tháng hiện đang vượt quá tổng thu nhập ghi nhận."}
           </span>
         </p>
+
+        {nextMonthSalaryIncome > 0 && now.getDate() >= 26 && (
+          <div className="mt-3 py-2 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>Đã nhận trước lương Tháng {nextMonthDate.getMonth() + 1}:</span>
+            </span>
+            <span className="font-mono font-bold text-emerald-300">
+              +{formatCurrency(nextMonthSalaryIncome)} (chuẩn bị cho tháng sau)
+            </span>
+          </div>
+        )}
       </div>
     </Card>
   );

@@ -14,7 +14,7 @@ import { Card } from "../common/Card";
 import { Spinner } from "../common/Spinner";
 
 export const BudgetPaceWidget: React.FC = () => {
-  const { data: cashFlowList = [], isLoading: cfLoading } = useCashFlow(1);
+  const { data: cashFlowList = [], isLoading: cfLoading } = useCashFlow(12);
   const { data: overview, isLoading: ovLoading } = useDashboardOverview();
 
   if ((cfLoading && !overview) || (ovLoading && !overview)) {
@@ -35,15 +35,27 @@ export const BudgetPaceWidget: React.FC = () => {
   const timeElapsedPct = (currentDay / totalDaysInMonth) * 100;
 
   // Monthly numbers
-  const latestCf = cashFlowList.length > 0 ? cashFlowList[0] : null;
-  const income = latestCf
-    ? Number(latestCf.total_income)
+  const currentMonthPrefix = `${year}-${String(month).padStart(2, "0")}`;
+  const currentMonthCf = cashFlowList.find(
+    (cf) => cf.month && String(cf.month).startsWith(currentMonthPrefix)
+  );
+
+  // Kiểm tra khoản lương tháng sau đã nhận trước trong khoảng 26-31 tháng này
+  const nextMonthDate = new Date(year, month, 1);
+  const nextMonthPrefix = `${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth() + 1).padStart(2, "0")}`;
+  const nextMonthCf = cashFlowList.find(
+    (cf) => cf.month && String(cf.month).startsWith(nextMonthPrefix)
+  );
+  const nextMonthSalaryIncome = nextMonthCf ? Number(nextMonthCf.total_income) : 0;
+
+  const income = currentMonthCf
+    ? Number(currentMonthCf.total_income)
     : overview
     ? Number(overview.monthly_income_current_month || 0)
     : 0;
 
-  const expense = latestCf
-    ? Number(latestCf.total_expense)
+  const expense = currentMonthCf
+    ? Number(currentMonthCf.total_expense)
     : overview
     ? Number(overview.monthly_spending_current_month || 0)
     : 0;
@@ -148,7 +160,17 @@ export const BudgetPaceWidget: React.FC = () => {
           ) : (
             <Sparkles className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
           )}
-          <p className="leading-relaxed text-[11px] text-slate-300">{paceDesc}</p>
+          <div className="space-y-1">
+            <p className="leading-relaxed text-[11px] text-slate-300">{paceDesc}</p>
+            {nextMonthSalaryIncome > 0 && currentDay >= 26 && (
+              <p className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span>
+                  Lương Tháng {nextMonthDate.getMonth() + 1} ({formatCurrency(nextMonthSalaryIncome)}) đã về và sẵn sàng cho tháng sau.
+                </span>
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </Card>

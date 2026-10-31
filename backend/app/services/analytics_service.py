@@ -137,13 +137,60 @@ class AnalyticsService:
         res_upcoming = await db.execute(text(sql_upcoming))
         row_upcoming = res_upcoming.mappings().one()
 
-        # 4. Monthly spending & income in current month
+        # 4. Monthly spending & income in current month (accounting for salary: 26 to end of month allocated to next month)
         sql_spending = """
+        WITH normalized_tx AS (
+            SELECT
+                t.transaction_type,
+                t.amount,
+                t.total_amount,
+                t.transaction_date,
+                CASE
+                    -- Chỉ áp dụng riêng cho Tiền lương (loại trừ Tiền thưởng, Hoa hồng, Làm nhiệm vụ, Freelance...)
+                    WHEN t.transaction_type = 'INCOME' 
+                         AND EXTRACT(DAY FROM t.transaction_date) >= 26
+                         -- Loại trừ rõ ràng Thưởng, Hoa hồng, Nhiệm vụ, Freelance
+                         AND LOWER(COALESCE(c.name, '')) NOT LIKE '%thưởng%'
+                         AND LOWER(COALESCE(c.name, '')) NOT LIKE '%hoa hồng%'
+                         AND LOWER(COALESCE(c.name, '')) NOT LIKE '%bonus%'
+                         AND LOWER(COALESCE(c.name, '')) NOT LIKE '%freelance%'
+                         AND (t.category_id IS NULL OR t.category_id != 'aaaaaaaa-3e4a-4be6-9333-18ebaf270002') -- Không phải 'Tiền thưởng & Hoa hồng'
+                         AND (t.category_id IS NULL OR t.category_id != 'aaaaaaaa-3e4a-4be6-9333-18ebaf270003') -- Không phải 'Thu nhập Freelance'
+                         AND (
+                             -- Khớp chính xác danh mục Tiền lương hàng tháng
+                             t.category_id = 'aaaaaaaa-3e4a-4be6-9333-18ebaf270001'
+                             -- Hoặc danh mục con trực tiếp chứa 'lương' / 'salary' (và không phải nhóm cha 'Lương & Thu nhập')
+                             OR (
+                                 (LOWER(COALESCE(c.name, '')) LIKE '%lương%' OR LOWER(COALESCE(c.name, '')) LIKE '%salary%')
+                                 AND LOWER(COALESCE(c.name, '')) != 'lương & thu nhập'
+                             )
+                             -- Hoặc giao dịch chưa gắn danh mục nhưng nội dung mô tả là nhận lương
+                             OR (
+                                 t.category_id IS NULL AND (
+                                     LOWER(COALESCE(t.raw_description, '')) LIKE '%lương%'
+                                     OR LOWER(COALESCE(t.raw_description, '')) LIKE '%salary%'
+                                     OR LOWER(COALESCE(t.raw_description, '')) LIKE '%luong%'
+                                     OR LOWER(COALESCE(t.note, '')) LIKE '%lương%'
+                                     OR LOWER(COALESCE(t.note, '')) LIKE '%salary%'
+                                     OR LOWER(COALESCE(t.note, '')) LIKE '%luong%'
+                                 )
+                                 AND LOWER(COALESCE(t.raw_description, '')) NOT LIKE '%thưởng%'
+                                 AND LOWER(COALESCE(t.note, '')) NOT LIKE '%thưởng%'
+                                 AND LOWER(COALESCE(t.raw_description, '')) NOT LIKE '%nhiệm vụ%'
+                                 AND LOWER(COALESCE(t.note, '')) NOT LIKE '%nhiệm vụ%'
+                             )
+                         )
+                        THEN (DATE_TRUNC('month', t.transaction_date) + INTERVAL '1 month')::DATE
+                    ELSE DATE_TRUNC('month', t.transaction_date)::DATE
+                END AS budget_month
+            FROM transactions t
+            LEFT JOIN categories c ON t.category_id = c.id
+            LEFT JOIN categories pc ON c.parent_id = pc.id
+        )
         SELECT
-            COALESCE(SUM(CASE WHEN transaction_type = 'INCOME' THEN amount ELSE 0 END), 0) AS current_month_income,
-            COALESCE(SUM(CASE WHEN transaction_type IN ('PURCHASE', 'INSTALLMENT_MONTHLY', 'FEE', 'INTEREST', 'CASH_ADVANCE') THEN total_amount ELSE 0 END), 0) AS current_month_spending
-        FROM transactions
-        WHERE transaction_date >= DATE_TRUNC('month', CURRENT_DATE)::DATE;
+            COALESCE(SUM(CASE WHEN transaction_type = 'INCOME' AND budget_month = DATE_TRUNC('month', CURRENT_DATE)::DATE THEN amount ELSE 0 END), 0) AS current_month_income,
+            COALESCE(SUM(CASE WHEN transaction_type IN ('PURCHASE', 'INSTALLMENT_MONTHLY', 'FEE', 'INTEREST', 'CASH_ADVANCE') AND budget_month = DATE_TRUNC('month', CURRENT_DATE)::DATE THEN total_amount ELSE 0 END), 0) AS current_month_spending
+        FROM normalized_tx;
         """
         res_spending = await db.execute(text(sql_spending))
         row_spending = res_spending.mappings().one()

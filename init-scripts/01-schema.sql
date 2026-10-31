@@ -1161,35 +1161,82 @@ SELECT
 FROM account_metrics;
 
 -- View 10: Thống kê Dòng tiền Thu - Chi - Thặng dư hàng tháng (Monthly Cash Flow)
+-- Quy tắc chu kỳ lương: Khoản thu nhập thuộc danh mục Lương nhận từ ngày 26 đến cuối tháng
+-- sẽ tự động kết chuyển làm thu nhập cho tháng tiếp theo (tháng dùng số tiền này để chi tiêu).
 CREATE OR REPLACE VIEW v_monthly_cash_flow WITH (security_invoker = true) AS
+WITH normalized_transactions AS (
+    SELECT
+        t.*,
+        CASE
+            -- Chỉ áp dụng riêng cho Tiền lương (loại trừ Tiền thưởng, Hoa hồng, Làm nhiệm vụ, Freelance...)
+            WHEN t.transaction_type = 'INCOME' 
+                 AND EXTRACT(DAY FROM t.transaction_date) >= 26
+                 -- Loại trừ rõ ràng Thưởng, Hoa hồng, Nhiệm vụ, Freelance
+                 AND LOWER(COALESCE(c.name, '')) NOT LIKE '%thưởng%'
+                 AND LOWER(COALESCE(c.name, '')) NOT LIKE '%hoa hồng%'
+                 AND LOWER(COALESCE(c.name, '')) NOT LIKE '%bonus%'
+                 AND LOWER(COALESCE(c.name, '')) NOT LIKE '%freelance%'
+                 AND (t.category_id IS NULL OR t.category_id != 'aaaaaaaa-3e4a-4be6-9333-18ebaf270002') -- Không phải 'Tiền thưởng & Hoa hồng'
+                 AND (t.category_id IS NULL OR t.category_id != 'aaaaaaaa-3e4a-4be6-9333-18ebaf270003') -- Không phải 'Thu nhập Freelance'
+                 AND (
+                     -- Khớp chính xác danh mục Tiền lương hàng tháng
+                     t.category_id = 'aaaaaaaa-3e4a-4be6-9333-18ebaf270001'
+                     -- Hoặc danh mục con trực tiếp chứa 'lương' / 'salary' (và không phải nhóm cha 'Lương & Thu nhập')
+                     OR (
+                         (LOWER(COALESCE(c.name, '')) LIKE '%lương%' OR LOWER(COALESCE(c.name, '')) LIKE '%salary%')
+                         AND LOWER(COALESCE(c.name, '')) != 'lương & thu nhập'
+                     )
+                     -- Hoặc giao dịch chưa gắn danh mục nhưng nội dung mô tả là nhận lương
+                     OR (
+                         t.category_id IS NULL AND (
+                             LOWER(COALESCE(t.raw_description, '')) LIKE '%lương%'
+                             OR LOWER(COALESCE(t.raw_description, '')) LIKE '%salary%'
+                             OR LOWER(COALESCE(t.raw_description, '')) LIKE '%luong%'
+                             OR LOWER(COALESCE(t.note, '')) LIKE '%lương%'
+                             OR LOWER(COALESCE(t.note, '')) LIKE '%salary%'
+                             OR LOWER(COALESCE(t.note, '')) LIKE '%luong%'
+                         )
+                         AND LOWER(COALESCE(t.raw_description, '')) NOT LIKE '%thưởng%'
+                         AND LOWER(COALESCE(t.note, '')) NOT LIKE '%thưởng%'
+                         AND LOWER(COALESCE(t.raw_description, '')) NOT LIKE '%nhiệm vụ%'
+                         AND LOWER(COALESCE(t.note, '')) NOT LIKE '%nhiệm vụ%'
+                     )
+                 )
+                THEN (DATE_TRUNC('month', t.transaction_date) + INTERVAL '1 month')::DATE
+            ELSE DATE_TRUNC('month', t.transaction_date)::DATE
+        END AS budget_month
+    FROM transactions t
+    LEFT JOIN categories c ON t.category_id = c.id
+    LEFT JOIN categories pc ON c.parent_id = pc.id
+)
 SELECT
-    DATE_TRUNC('month', t.transaction_date)::DATE AS month,
-    COALESCE(SUM(CASE WHEN t.transaction_type = 'INCOME' THEN t.amount ELSE 0.00 END), 0.00) AS total_income,
+    nt.budget_month AS month,
+    COALESCE(SUM(CASE WHEN nt.transaction_type = 'INCOME' THEN nt.amount ELSE 0.00 END), 0.00) AS total_income,
     COALESCE(SUM(CASE 
-        WHEN t.transaction_type IN ('PURCHASE', 'INSTALLMENT_MONTHLY', 'FEE', 'INTEREST', 'CASH_ADVANCE', 'REFUND', 'ADJUSTMENT') 
-        THEN t.total_amount ELSE 0.00 END), 0.00) AS total_expense,
+        WHEN nt.transaction_type IN ('PURCHASE', 'INSTALLMENT_MONTHLY', 'FEE', 'INTEREST', 'CASH_ADVANCE', 'REFUND', 'ADJUSTMENT') 
+        THEN nt.total_amount ELSE 0.00 END), 0.00) AS total_expense,
     (
-        COALESCE(SUM(CASE WHEN t.transaction_type = 'INCOME' THEN t.amount ELSE 0.00 END), 0.00) -
+        COALESCE(SUM(CASE WHEN nt.transaction_type = 'INCOME' THEN nt.amount ELSE 0.00 END), 0.00) -
         COALESCE(SUM(CASE 
-            WHEN t.transaction_type IN ('PURCHASE', 'INSTALLMENT_MONTHLY', 'FEE', 'INTEREST', 'CASH_ADVANCE', 'REFUND', 'ADJUSTMENT') 
-            THEN t.total_amount ELSE 0.00 END), 0.00)
+            WHEN nt.transaction_type IN ('PURCHASE', 'INSTALLMENT_MONTHLY', 'FEE', 'INTEREST', 'CASH_ADVANCE', 'REFUND', 'ADJUSTMENT') 
+            THEN nt.total_amount ELSE 0.00 END), 0.00)
     ) AS net_savings,
     CASE
-        WHEN COALESCE(SUM(CASE WHEN t.transaction_type = 'INCOME' THEN t.amount ELSE 0.00 END), 0.00) > 0 THEN
+        WHEN COALESCE(SUM(CASE WHEN nt.transaction_type = 'INCOME' THEN nt.amount ELSE 0.00 END), 0.00) > 0 THEN
             ROUND((
                 (
-                    COALESCE(SUM(CASE WHEN t.transaction_type = 'INCOME' THEN t.amount ELSE 0.00 END), 0.00) -
+                    COALESCE(SUM(CASE WHEN nt.transaction_type = 'INCOME' THEN nt.amount ELSE 0.00 END), 0.00) -
                     COALESCE(SUM(CASE 
-                        WHEN t.transaction_type IN ('PURCHASE', 'INSTALLMENT_MONTHLY', 'FEE', 'INTEREST', 'CASH_ADVANCE', 'REFUND', 'ADJUSTMENT') 
-                        THEN t.total_amount ELSE 0.00 END), 0.00)
+                        WHEN nt.transaction_type IN ('PURCHASE', 'INSTALLMENT_MONTHLY', 'FEE', 'INTEREST', 'CASH_ADVANCE', 'REFUND', 'ADJUSTMENT') 
+                        THEN nt.total_amount ELSE 0.00 END), 0.00)
                 ) /
-                COALESCE(SUM(CASE WHEN t.transaction_type = 'INCOME' THEN t.amount ELSE 0.00 END), 0.00)
+                COALESCE(SUM(CASE WHEN nt.transaction_type = 'INCOME' THEN nt.amount ELSE 0.00 END), 0.00)
             ) * 100.0, 2)
         ELSE 0.00
     END AS savings_rate_percent,
-    COUNT(t.id) AS total_transactions_count
-FROM transactions t
-GROUP BY DATE_TRUNC('month', t.transaction_date)::DATE
+    COUNT(nt.id) AS total_transactions_count
+FROM normalized_transactions nt
+GROUP BY nt.budget_month
 ORDER BY month DESC;
 
 -- ====================================================================
