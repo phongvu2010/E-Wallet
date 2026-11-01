@@ -1,5 +1,49 @@
+from datetime import date
 import pytest
 from httpx import AsyncClient
+
+from app.services.card_recommendation_service import calculate_card_grace_metrics
+
+
+def test_calculate_card_grace_metrics_golden_period():
+    """Verify golden period detection and 55-day grace period right after statement cut-off."""
+    # Billing day 20, Grace period 25 days, transaction on Oct 21
+    res = calculate_card_grace_metrics(20, 25, date(2026, 10, 21))
+    assert res["interest_free_days"] == 55
+    assert res["is_golden_period"] is True
+    assert res["estimated_due_date"] == date(2026, 12, 15)
+    assert res["grace_period_rating"] == "OPTIMAL"
+    assert "THỜI ĐIỂM VÀNG" in res["payment_delay_tip"]
+
+
+def test_calculate_card_grace_metrics_pre_cutoff():
+    """Verify pre-cutoff warning and wait suggestion when close to billing date."""
+    # Billing day 20, Grace period 25 days, transaction on Oct 19
+    res = calculate_card_grace_metrics(20, 25, date(2026, 10, 19))
+    assert res["interest_free_days"] == 26
+    assert res["is_golden_period"] is False
+    assert res["days_until_best_spend_date"] == 2
+    assert res["estimated_due_date"] == date(2026, 11, 14)
+    assert res["best_spend_date"] == date(2026, 10, 21)
+    assert "Lùi quẹt thẻ" in res["payment_delay_tip"] or "chốt sao kê" in res["payment_delay_tip"]
+
+
+def test_calculate_card_grace_metrics_unconfigured():
+    """Verify fallback behavior when billing day is not configured."""
+    res = calculate_card_grace_metrics(None, 15, date(2026, 10, 15))
+    assert res["interest_free_days"] == 15
+    assert res["billing_day_of_month"] is None
+    assert res["estimated_due_date"] == date(2026, 10, 30)
+
+
+def test_calculate_card_grace_metrics_fixed_due_day_tk_tra_sau():
+    """Verify TK Tra Sau with billing day 28 and fixed due day 4 of next month."""
+    # Transaction on Nov 1st -> falls into billing Nov 28th -> due date is Dec 4th
+    res = calculate_card_grace_metrics(28, 7, date(2026, 11, 1), due_day_of_month=4)
+    assert res["estimated_due_date"] == date(2026, 12, 4)
+    assert res["interest_free_days"] == 33
+    assert res["is_golden_period"] is True
+    assert "04/12/2026" in res["payment_delay_tip"]
 
 
 @pytest.mark.asyncio

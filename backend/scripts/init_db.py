@@ -102,6 +102,22 @@ def ensure_compatibility_schema(cursor, connection):
         -- Ensure debts has origin_transaction_id column
         ALTER TABLE debts ADD COLUMN IF NOT EXISTS origin_transaction_id UUID REFERENCES transactions(id) ON DELETE SET NULL;
 
+        -- Auto-populate billing_day_of_month and grace_period_days from statements history if not set
+        UPDATE accounts a
+        SET 
+            billing_day_of_month = sub.stmt_day,
+            grace_period_days = COALESCE(sub.stmt_grace, a.grace_period_days, 15)
+        FROM (
+            SELECT DISTINCT ON (account_id)
+                account_id,
+                EXTRACT(DAY FROM statement_date)::INTEGER AS stmt_day,
+                GREATEST(1, (payment_due_date - statement_date))::INTEGER AS stmt_grace
+            FROM statements
+            ORDER BY account_id, statement_date DESC
+        ) sub
+        WHERE a.id = sub.account_id 
+          AND (a.billing_day_of_month IS NULL OR a.billing_day_of_month = 0);
+
         -- Ensure optimized v_account_live_balance view (Partitioned CTEs)
         CREATE OR REPLACE VIEW v_account_live_balance WITH (security_invoker = true) AS
         WITH latest_statement_per_account AS (

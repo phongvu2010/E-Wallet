@@ -55,6 +55,8 @@ export const AccountsPage: React.FC = () => {
   const [editAccountName, setEditAccountName] = useState<string>("");
   const [editLimit, setEditLimit] = useState<string>("");
   const [editInitialBalance, setEditInitialBalance] = useState<string>("");
+  const [editBillingDay, setEditBillingDay] = useState<string>("");
+  const [editGraceDays, setEditGraceDays] = useState<string>("15");
   const [editNote, setEditNote] = useState<string>("");
   const [editStatus, setEditStatus] = useState<AccountStatus>("ACTIVE");
   const [editAccountType, setEditAccountType] = useState<AccountType>("CREDIT_CARD");
@@ -78,6 +80,8 @@ export const AccountsPage: React.FC = () => {
     setEditAccountName(acc.account_name);
     setEditLimit(String(acc.credit_limit || 0));
     setEditInitialBalance(String(acc.initial_balance || 0));
+    setEditBillingDay(acc.billing_day_of_month ? String(acc.billing_day_of_month) : "");
+    setEditGraceDays(acc.grace_period_days ? String(acc.grace_period_days) : "15");
     setEditNote(acc.note || "");
     setEditStatus(acc.status);
     setEditAccountType(acc.account_type);
@@ -91,6 +95,8 @@ export const AccountsPage: React.FC = () => {
 
     const parsedLimit = parseFloat(editLimit) || 0;
     const parsedInitial = parseFloat(editInitialBalance) || 0;
+    const parsedBillingDay = parseInt(editBillingDay, 10);
+    const parsedGraceDays = parseInt(editGraceDays, 10);
 
     try {
       await updateMutation.mutateAsync({
@@ -99,6 +105,14 @@ export const AccountsPage: React.FC = () => {
           account_name: editAccountName.trim(),
           credit_limit: editAccountType === "CREDIT_CARD" ? parsedLimit : 0,
           initial_balance: editAccountType !== "CREDIT_CARD" ? parsedInitial : 0,
+          billing_day_of_month:
+            editAccountType === "CREDIT_CARD" && !isNaN(parsedBillingDay)
+              ? parsedBillingDay
+              : null,
+          grace_period_days:
+            editAccountType === "CREDIT_CARD" && !isNaN(parsedGraceDays)
+              ? parsedGraceDays
+              : 15,
           note: editNote.trim() ? editNote.trim() : null,
           status: editStatus,
         },
@@ -403,7 +417,14 @@ export const AccountsPage: React.FC = () => {
                       </td>
 
                       <td className="py-3.5 px-4 font-mono text-slate-300">
-                        {acc.card_number_masked || "—"}
+                        <div>{acc.card_number_masked || "—"}</div>
+                        {!isAsset && (
+                          <div className="text-[10px] text-slate-400 font-sans mt-0.5">
+                            {rawAcc?.billing_day_of_month
+                              ? `Chốt ngày ${rawAcc.billing_day_of_month} • Miễn lãi ${rawAcc.grace_period_days || 15}d`
+                              : "Chưa cấu hình kỳ sao kê"}
+                          </div>
+                        )}
                       </td>
 
                       <td className="py-3.5 px-4 text-right font-mono text-slate-300">
@@ -501,16 +522,49 @@ export const AccountsPage: React.FC = () => {
           </div>
 
           {editAccountType === "CREDIT_CARD" ? (
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Hạn Mức Tín Dụng (VNĐ)
-              </label>
-              <CurrencyInput
-                value={editLimit}
-                onChange={setEditLimit}
-                placeholder="0"
-              />
-            </div>
+            <>
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  Hạn Mức Tín Dụng (VNĐ)
+                </label>
+                <CurrencyInput
+                  value={editLimit}
+                  onChange={setEditLimit}
+                  placeholder="0"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 p-3 bg-slate-950/60 rounded-xl border border-slate-800">
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Ngày chốt sao kê (1-31)
+                  </label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={editBillingDay}
+                    onChange={(e) => setEditBillingDay(e.target.value)}
+                    placeholder="VD: 17, 20"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">Ngày chốt định kỳ trong tháng</span>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Thời gian ân hạn (ngày)
+                  </label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={editGraceDays}
+                    onChange={(e) => setEditGraceDays(e.target.value)}
+                    placeholder="VD: 15 hoặc 25"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">Số ngày miễn lãi sau sao kê</span>
+                </div>
+              </div>
+            </>
           ) : (
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1.5">

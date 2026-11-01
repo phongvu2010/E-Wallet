@@ -18,11 +18,15 @@ export interface CardBenefit {
   is_active: boolean;
 }
 
+export type RecommendationStrategy = "BALANCED" | "MAX_REWARD" | "MAX_GRACE_PERIOD";
+
 export interface CardRecommendationRequest {
   amount: number;
   category_id?: string;
   category_name?: string;
   merchant_name?: string;
+  transaction_date?: string;
+  strategy?: RecommendationStrategy;
 }
 
 export interface CardRecommendationItem {
@@ -47,6 +51,20 @@ export interface CardRecommendationItem {
   estimated_points_earned: number;
   benefit_description: string;
 
+  // Grace Period & Interest-Free Float Optimization
+  billing_day_of_month?: number;
+  due_day_of_month?: number;
+  grace_period_days: number;
+  next_billing_date?: string;
+  estimated_due_date?: string;
+  interest_free_days: number;
+  max_possible_grace_days: number;
+  best_spend_date?: string;
+  days_until_best_spend_date?: number;
+  grace_period_rating: "OPTIMAL" | "GOOD" | "FAIR" | "SHORT";
+  is_golden_period: boolean;
+  payment_delay_tip?: string;
+
   rank: number;
   is_best_choice: boolean;
   recommendation_score: number;
@@ -57,6 +75,8 @@ export interface CardRecommendationResponse {
   requested_amount: number;
   detected_category: string;
   detected_merchant?: string;
+  applied_strategy: RecommendationStrategy;
+  evaluated_transaction_date: string;
   best_choice?: CardRecommendationItem;
   recommendations: CardRecommendationItem[];
   total_evaluated_cards: number;

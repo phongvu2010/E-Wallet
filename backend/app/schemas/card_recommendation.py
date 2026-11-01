@@ -1,10 +1,18 @@
+from datetime import date
 from decimal import Decimal
+import enum
 from typing import List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.reward import RewardTypeEnum
+
+
+class RecommendationStrategyEnum(str, enum.Enum):
+    BALANCED = "BALANCED"                    # Cân bằng giữa Hoàn tiền & Ngày miễn lãi
+    MAX_REWARD = "MAX_REWARD"                # Tối đa hóa tỷ lệ hoàn tiền / tích điểm
+    MAX_GRACE_PERIOD = "MAX_GRACE_PERIOD"    # Tối đa hóa thời gian chiếm dụng vốn miễn lãi (Float Days)
 
 
 class CardBenefitBase(BaseModel):
@@ -47,6 +55,13 @@ class CardRecommendationRequest(BaseModel):
     merchant_name: Optional[str] = Field(
         None, description="Tên cửa hàng / merchant (VD: 'Shopee', 'Starbucks')"
     )
+    transaction_date: Optional[date] = Field(
+        None, description="Ngày dự kiến giao dịch quẹt thẻ (Mặc định hôm nay)"
+    )
+    strategy: Optional[RecommendationStrategyEnum] = Field(
+        default=RecommendationStrategyEnum.BALANCED,
+        description="Chiến lược đề xuất: BALANCED, MAX_REWARD, MAX_GRACE_PERIOD",
+    )
 
 
 class CardRecommendationItem(BaseModel):
@@ -75,10 +90,24 @@ class CardRecommendationItem(BaseModel):
     estimated_points_earned: Decimal  # Số điểm thưởng tích lũy (nếu là POINT)
     benefit_description: str
 
+    # Grace Period & Interest-Free Float Optimization
+    billing_day_of_month: Optional[int] = None
+    due_day_of_month: Optional[int] = None
+    grace_period_days: int = 15
+    next_billing_date: Optional[date] = None
+    estimated_due_date: Optional[date] = None
+    interest_free_days: int = 0
+    max_possible_grace_days: int = 45
+    best_spend_date: Optional[date] = None
+    days_until_best_spend_date: Optional[int] = None
+    grace_period_rating: str = "GOOD"  # OPTIMAL, GOOD, FAIR, SHORT
+    is_golden_period: bool = False
+    payment_delay_tip: Optional[str] = None
+
     # Scoring & ranking
     rank: int
     is_best_choice: bool
-    recommendation_score: float  # Điểm tổng hợp dựa trên reward rate, limit headroom, và risk
+    recommendation_score: float  # Điểm tổng hợp dựa trên reward rate, grace days, limit headroom, và risk
     reasons: List[str]  # Các lý do gợi ý
 
 
@@ -86,6 +115,8 @@ class CardRecommendationResponse(BaseModel):
     requested_amount: Decimal
     detected_category: str
     detected_merchant: Optional[str] = None
+    applied_strategy: RecommendationStrategyEnum = RecommendationStrategyEnum.BALANCED
+    evaluated_transaction_date: date
     best_choice: Optional[CardRecommendationItem] = None
     recommendations: List[CardRecommendationItem] = []
     total_evaluated_cards: int

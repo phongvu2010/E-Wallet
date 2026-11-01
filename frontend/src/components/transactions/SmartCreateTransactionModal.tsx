@@ -1257,6 +1257,14 @@ export const SmartCreateTransactionModal: React.FC<
                           +{formatCurrency(recommendation.estimated_reward_amount)}
                         </strong>
                       </div>
+                      {recommendation.interest_free_days > 0 && (
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-400">Miễn lãi ngân hàng:</span>
+                          <strong className="text-cyan-400 font-mono font-semibold">
+                            ⏳ {recommendation.interest_free_days} ngày
+                          </strong>
+                        </div>
+                      )}
                     </div>
 
                     <Button
