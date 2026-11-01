@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.schemas.analytics import (
     CreditUtilizationRead,
+    DailySpendingComparisonRead,
     DashboardOverviewRead,
     MonthlyCashFlowRead,
     MonthlyCategorySpendingRead,
@@ -84,3 +85,19 @@ async def get_upcoming_obligations(
 ):
     """Fetch upcoming payment deadlines across billed statements and installment schedules within a specified days window."""
     return await AnalyticsService.get_upcoming_obligations(db, days_ahead=days_ahead)
+
+
+@router.get(
+    "/daily-spending-comparison",
+    response_model=DailySpendingComparisonRead,
+    summary="Get day-by-day spending pacing comparison between two months",
+)
+async def get_daily_spending_comparison(
+    current_month: Optional[str] = Query(default=None, pattern=r"^\d{4}-\d{2}$"),
+    previous_month: Optional[str] = Query(default=None, pattern=r"^\d{4}-\d{2}$"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Retrieve cumulative and daily spending timeline comparing this month vs last month (Days 1 to 31)."""
+    return await AnalyticsService.get_daily_spending_comparison(
+        db, current_month=current_month, previous_month=previous_month
+    )

@@ -29,6 +29,7 @@ import { NetWorthHeroWidget } from "../components/cards/NetWorthHeroWidget";
 
 // Chart Components
 import { MonthlySpendingBarChart } from "../components/charts/MonthlySpendingBarChart";
+import { MonthOverMonthSpendingChart } from "../components/charts/MonthOverMonthSpendingChart";
 import { SpendingDonutChart } from "../components/charts/SpendingDonutChart";
 
 // Modal Components
@@ -63,6 +64,7 @@ export const DashboardPage: React.FC = () => {
 
   const [isCreateAccountOpen, setIsCreateAccountOpen] = useState(false);
   const [isCreateTxOpen, setIsCreateTxOpen] = useState(false);
+  const [chartTab, setChartTab] = useState<"trend" | "mom">("trend");
 
   // Generate full monthly spending data for the latest year (year-to-date)
   const annualSpendingData = useMemo(() => {
@@ -393,28 +395,63 @@ export const DashboardPage: React.FC = () => {
             </Card>
           </div>
 
-          {/* Bar Chart: Xu Hướng Chi Tiêu Hàng Tháng Lịch Sử (8 Cols) */}
+          {/* Bar Chart: Xu Hướng Chi Tiêu Hàng Tháng Lịch Sử / So Sánh (8 Cols) */}
           <div className="lg:col-span-8">
             <Card className="flex flex-col h-full">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4 mb-4">
                 <div>
                   <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
                     <BarChart3 className="w-5 h-5 text-emerald-400" />
-                    <span>Xu Hướng Chi Tiêu Hàng Tháng</span>
+                    <span>
+                      {chartTab === "trend"
+                        ? "Xu Hướng Chi Tiêu Hàng Tháng"
+                        : "So Sánh Chi Tiêu Tháng Này vs Tháng Trước"}
+                    </span>
                   </h3>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Đã tự động bù trừ các khoản hoàn tiền, giảm phí và hủy giao dịch
+                    {chartTab === "trend"
+                      ? "Đã tự động bù trừ các khoản hoàn tiền, giảm phí và hủy giao dịch"
+                      : "Đối chiếu trực tiếp chi tiêu từng danh mục giữa hai kỳ gần nhất"}
                   </p>
                 </div>
-                <Link
-                  to="/analytics"
-                  className="text-xs font-semibold text-emerald-400 hover:text-emerald-300"
-                >
-                  Báo cáo chi tiết →
-                </Link>
+
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center bg-slate-950/80 border border-slate-800 rounded-lg p-0.5 text-xs">
+                    <button
+                      onClick={() => setChartTab("trend")}
+                      className={`px-2.5 py-1 rounded-md font-medium transition-all ${
+                        chartTab === "trend"
+                          ? "bg-emerald-500/20 text-emerald-400 font-bold"
+                          : "text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      Xu Hướng Năm
+                    </button>
+                    <button
+                      onClick={() => setChartTab("mom")}
+                      className={`px-2.5 py-1 rounded-md font-medium transition-all ${
+                        chartTab === "mom"
+                          ? "bg-emerald-500/20 text-emerald-400 font-bold"
+                          : "text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      So Sánh 2 Tháng
+                    </button>
+                  </div>
+                  <Link
+                    to="/analytics"
+                    className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 ml-1 hidden sm:inline"
+                  >
+                    Báo cáo chi tiết →
+                  </Link>
+                </div>
               </div>
 
-              <MonthlySpendingBarChart data={annualSpendingData} />
+              {chartTab === "trend" ? (
+                <MonthlySpendingBarChart data={annualSpendingData} />
+              ) : (
+                <MonthOverMonthSpendingChart data={monthlySpending} />
+              )}
             </Card>
           </div>
         </div>

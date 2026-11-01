@@ -215,6 +215,24 @@ export function useCreditUtilization() {
   });
 }
 
+/**
+ * Query hook to fetch day-by-day spending comparison (timeline pacing) between two months.
+ */
+export function useDailySpendingComparison(
+  currentMonth?: string,
+  previousMonth?: string
+) {
+  return useQuery({
+    queryKey: queryKeys.analytics.dailySpendingComparison(
+      currentMonth,
+      previousMonth
+    ),
+    queryFn: () =>
+      analyticsService.getDailySpendingComparison(currentMonth, previousMonth),
+    staleTime: 60 * 1000,
+  });
+}
+
 // ====================================================================
 // 6. CATEGORIES, MERCHANTS & BENEFITS
 // ====================================================================

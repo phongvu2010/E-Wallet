@@ -6,6 +6,7 @@ import {
   UpcomingObligation,
   NetWorthOverview,
   MonthlyCashFlow,
+  DailySpendingComparison,
 } from "../types/analytics";
 
 /**
@@ -63,6 +64,23 @@ export const analyticsService = {
     const res = await api.get<UpcomingObligation[]>("/analytics/upcoming-obligations", {
       params: { days_ahead: daysAhead },
     });
+    return res.data;
+  },
+
+  /**
+   * Fetch daily and cumulative spending timeline comparison between two months.
+   */
+  getDailySpendingComparison: async (
+    currentMonth?: string,
+    previousMonth?: string
+  ): Promise<DailySpendingComparison> => {
+    const params: Record<string, string> = {};
+    if (currentMonth) params.current_month = currentMonth;
+    if (previousMonth) params.previous_month = previousMonth;
+    const res = await api.get<DailySpendingComparison>(
+      "/analytics/daily-spending-comparison",
+      { params }
+    );
     return res.data;
   },
 };

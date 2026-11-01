@@ -15,6 +15,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { SpendingDonutChart } from "../components/charts/SpendingDonutChart";
+import { MonthOverMonthSpendingChart } from "../components/charts/MonthOverMonthSpendingChart";
 import { Badge } from "../components/common/Badge";
 import { Card } from "../components/common/Card";
 import { Spinner } from "../components/common/Spinner";
@@ -245,7 +246,12 @@ export const AnalyticsPage: React.FC = () => {
         </Card>
       </div>
 
-      {/* 4. Monthly Cash Flow (Thu Nhập vs Chi Tiêu vs Tích Lũy) - Đã đưa xuống dưới */}
+      {/* 4. Month-over-Month Spending Comparison */}
+      <Card>
+        <MonthOverMonthSpendingChart data={monthlySpending} />
+      </Card>
+
+      {/* 5. Monthly Cash Flow (Thu Nhập vs Chi Tiêu vs Tích Lũy) - Đã đưa xuống dưới */}
       <Card>
         <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
           <div>

@@ -101,6 +101,13 @@ export const queryKeys = {
       [...queryKeys.analytics.all, "upcomingObligations", daysAhead] as const,
     creditUtilization: () =>
       [...queryKeys.analytics.all, "creditUtilization"] as const,
+    dailySpendingComparison: (currentMonth?: string, previousMonth?: string) =>
+      [
+        ...queryKeys.analytics.all,
+        "dailySpendingComparison",
+        currentMonth || "latest",
+        previousMonth || "prev",
+      ] as const,
   },
 
   // ------------------------------------------------------------------

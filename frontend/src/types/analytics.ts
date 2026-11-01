@@ -71,3 +71,28 @@ export interface DashboardOverview {
   monthly_spending_current_month: number;
   monthly_income_current_month: number;
 }
+
+export interface DailySpendingComparisonItem {
+  day: number;
+  daily_current: number;
+  daily_previous: number;
+  cumulative_current: number | null;
+  cumulative_previous: number;
+  tx_count_current: number;
+  tx_count_previous: number;
+}
+
+export interface DailySpendingComparison {
+  current_month: string;
+  previous_month: string;
+  days_in_current_month: number;
+  days_in_previous_month: number;
+  as_of_day: number;
+  is_current_calendar_month: boolean;
+  total_spending_current: number;
+  total_spending_previous: number;
+  total_spending_previous_same_day: number;
+  diff_amount_same_day: number;
+  diff_percent_same_day: number;
+  items: DailySpendingComparisonItem[];
+}

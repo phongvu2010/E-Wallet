@@ -1,6 +1,6 @@
 from datetime import date
 from decimal import Decimal
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -78,3 +78,28 @@ class DashboardOverviewRead(BaseModel):
     total_upcoming_due_30d: Decimal = Decimal("0.00")
     monthly_spending_current_month: Decimal = Decimal("0.00")
     monthly_income_current_month: Decimal = Decimal("0.00")
+
+
+class DailySpendingComparisonItem(BaseModel):
+    day: int
+    daily_current: Decimal = Decimal("0.00")
+    daily_previous: Decimal = Decimal("0.00")
+    cumulative_current: Optional[Decimal] = None
+    cumulative_previous: Decimal = Decimal("0.00")
+    tx_count_current: int = 0
+    tx_count_previous: int = 0
+
+
+class DailySpendingComparisonRead(BaseModel):
+    current_month: str
+    previous_month: str
+    days_in_current_month: int
+    days_in_previous_month: int
+    as_of_day: int
+    is_current_calendar_month: bool
+    total_spending_current: Decimal
+    total_spending_previous: Decimal
+    total_spending_previous_same_day: Decimal
+    diff_amount_same_day: Decimal
+    diff_percent_same_day: Decimal
+    items: List[DailySpendingComparisonItem]
